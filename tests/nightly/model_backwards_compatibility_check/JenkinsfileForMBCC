@@ -101,13 +101,13 @@ try {
     }
   }
 } catch (caughtError) {
-  node("mxnetlinux-cpu") {
+  node("restricted-mxnetlinux-cpu") {
     sh "echo caught ${caughtError}"
     err = caughtError
     currentBuild.result = "FAILURE"
   }
 } finally {
-  node("mxnetlinux-cpu") {
+  node("restricted-mxnetlinux-cpu") {
     // Only send email if model backwards compat test failed
     if (currentBuild.result == "FAILURE") {
     	emailext body: 'Nightly tests for model backwards compatibity on MXNet branch : ${BRANCH_NAME} failed. Please view the build at ${BUILD_URL}', replyTo: '${EMAIL}', subject: '[MODEL BACKWARDS COMPATIBILITY TEST FAILED] build ${BUILD_NUMBER}', to: '${EMAIL}'
