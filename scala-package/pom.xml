@@ -52,6 +52,7 @@
     <module>examples</module>
     <module>spark</module>
     <module>assembly</module>
+    <module>java-pkg</module>
   </modules>
 
   <profiles>
@@ -214,7 +215,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.19</version>
         <configuration>
-          <skipTests>true</skipTests>
+          <skipTests>false</skipTests>
         </configuration>
       </plugin>
       <plugin>
