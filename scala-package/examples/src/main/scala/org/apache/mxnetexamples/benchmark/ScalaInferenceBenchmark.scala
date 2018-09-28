@@ -41,14 +41,14 @@ object ScalaInferenceBenchmark {
     objectToRun.loadDataSet()
   }
 
-  def runInference(objectToRun: InferBase, loadedModel: Classifier,  dataSet: Any, totalRuns: Int):
+  def runInference(objectToRun: InferBase, loadedModel: Classifier, dataSet: Any, totalRuns: Int):
   Any = {
 
     for (i <- 1 to totalRuns) {
       val startTimeSingle = System.currentTimeMillis()
       objectToRun.runInference(loadedModel, dataSet)
       val estimatedTimeSingle = System.currentTimeMillis() - startTimeSingle
-      printf("Inference time at iteration: %d is : %d \n",i, estimatedTimeSingle)
+      printf("Inference time at iteration: %d is : %d \n", i, estimatedTimeSingle)
     }
   }
 
@@ -83,7 +83,8 @@ object ScalaInferenceBenchmark {
       val count = inst.count.toString().toInt
 
       val exampleToBenchmark : InferBase = exampleName match {
-        case "ImageClassifierExample" => new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
+        case "ImageClassifierExample" =>
+          new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
         case _ => throw new Exception("Invalid example name to run")
       }
 
