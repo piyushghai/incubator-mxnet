@@ -44,14 +44,25 @@ object ImageClassifierExample {
   private val logger = LoggerFactory.getLogger(classOf[ImageClassifierExample])
 
 
-  def runInferenceOnSingleImage(imageClassifierExample: ImageClassifierExample,
+  def runInferenceOnSingleImage(modelPathPrefix: String, inputImagePath: String,
                                 context: Array[Context]):
   IndexedSeq[IndexedSeq[(String, Float)]] = {
     NDArrayCollector.auto().withScope {
-      val model = imageClassifierExample.loadModel(context)
-      val data = imageClassifierExample.loadDataSet()
-      val output = imageClassifierExample.runInference(model, data)
-      output.asInstanceOf[IndexedSeq[IndexedSeq[(String, Float)]]]
+      val dType = DType.Float32
+      val inputShape = Shape(1, 3, 224, 224)
+
+      val inputDescriptor = IndexedSeq(DataDesc("data", inputShape, dType, "NCHW"))
+
+      // Create object of ImageClassifier class
+      val imgClassifier: ImageClassifier = new
+          ImageClassifier(modelPathPrefix, inputDescriptor, context)
+
+      // Loading single image from file and getting BufferedImage
+      val img = ImageClassifier.loadImageFromFile(inputImagePath)
+
+      // Running inference on single image
+      val output = imgClassifier.classifyImage(img, Some(5))
+      output
     }
   }
 
@@ -124,8 +135,7 @@ object ImageClassifierExample {
       val inputImageDir = if (inst.inputImageDir == null) System.getenv("MXNET_HOME")
       else inst.inputImageDir
 
-      val singleOutput = runInferenceOnSingleImage(
-          new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir), context)
+      val singleOutput = runInferenceOnSingleImage(modelPathPrefix, inputImagePath, context)
 
       // Printing top 5 class probabilities
       for (i <- singleOutput) {
