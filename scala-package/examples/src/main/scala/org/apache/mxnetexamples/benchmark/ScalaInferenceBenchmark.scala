@@ -46,27 +46,49 @@ object ScalaInferenceBenchmark {
   }
 
   def runInference(objectToRun: InferBase, loadedModel: Classifier,  dataSet: Any, totalRuns: Int):
-  Any = {
-
+  List[Long] = {
+    var inferenceTimes: List[Long] = List()
     for (i <- 1 to totalRuns) {
       val startTimeSingle = System.currentTimeMillis()
       objectToRun.runSingleInference(loadedModel, dataSet)
       val estimatedTimeSingle = System.currentTimeMillis() - startTimeSingle
+      inferenceTimes = estimatedTimeSingle :: inferenceTimes
       printf("Inference time at iteration: %d is : %d \n", i, estimatedTimeSingle)
     }
+
+    inferenceTimes
   }
 
   def runBatchInference(objecToRun: InferBase, loadedModel: Classifier, dataSetBatches: List[Any]):
-  Any = {
+  List[Long] = {
 
+    var inferenceTimes: List[Long] = List()
     for (batch <- dataSetBatches) {
       val loadedBatch = objecToRun.loadInputBatch(batch)
       val startTimeSingle = System.currentTimeMillis()
       objecToRun.runBatchInference(loadedModel, loadedBatch)
       val estimatedTimeSingle = System.currentTimeMillis() - startTimeSingle
+      inferenceTimes = estimatedTimeSingle :: inferenceTimes
       printf("Batch Inference time is : %d \n", estimatedTimeSingle)
-
     }
+
+    inferenceTimes
+  }
+
+  def percentile(p: Int, seq: Seq[Long]): Long = {
+    val sorted = seq.sorted
+    val k = math.ceil((seq.length - 1) * (p / 100.0)).toInt
+    return sorted(k)
+  }
+
+  def printStatistics(inferenceTimes: List[Long])  {
+
+    val times: Seq[Long] = inferenceTimes
+    val p50 = percentile(50, times)
+    val p99 = percentile(99, times)
+    val average = times.sum / (times.length * 1.0)
+
+    printf("\nLatency p99 %d(ms), p50 %d(ms), average %f(ms)", p99, p50, average)
 
   }
 
@@ -112,8 +134,8 @@ object ScalaInferenceBenchmark {
       NDArrayCollector.auto().withScope {
         val loadedModel = loadModel(exampleToBenchmark, context)
         val dataSet = loadDataSet(exampleToBenchmark)
-        runInference(exampleToBenchmark, loadedModel, dataSet, count)
-
+        val inferenceTimes = runInference(exampleToBenchmark, loadedModel, dataSet, count)
+        printStatistics(inferenceTimes)
       }
 
       logger.info("Running for batch inference call")
@@ -121,7 +143,8 @@ object ScalaInferenceBenchmark {
       NDArrayCollector.auto().withScope {
         val loadedModel = loadModel(exampleToBenchmark, context)
         val batchDataSet = loadBatchDataSet(exampleToBenchmark, batchSize)
-        runBatchInference(exampleToBenchmark, loadedModel, batchDataSet)
+        val inferenceTimes = runBatchInference(exampleToBenchmark, loadedModel, batchDataSet)
+        printStatistics(inferenceTimes)
       }
 
     } catch {
