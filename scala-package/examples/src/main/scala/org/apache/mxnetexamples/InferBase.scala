@@ -17,7 +17,6 @@
 
 package org.apache.mxnetexamples
 
-import org.apache.mxnet.infer.Classifier
 import org.apache.mxnet._
 
 trait InferBase {
@@ -26,7 +25,6 @@ trait InferBase {
   def loadSingleData(): Any
   def loadBatchFileList(batchSize: Int): List[Any]
   def loadInputBatch(source: Any): Any
-  def runSingleInference(loadedModel: Classifier, input: Any): Any
-  def runBatchInference(loadedModel: Classifier, input: Any): Any
-
+  def runSingleInference(loadedModel: Any, input: Any): Any
+  def runBatchInference(loadedModel: Any, input: Any): Any
 }

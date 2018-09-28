@@ -31,7 +31,7 @@ object ScalaInferenceBenchmark {
   private val logger = LoggerFactory.getLogger(classOf[ScalaInferenceBenchmark])
 
   def loadModel(objectToRun: InferBase, context: Array[Context]):
-  Classifier = {
+  Any = {
     objectToRun.loadModel(context)
   }
 
@@ -127,6 +127,8 @@ object ScalaInferenceBenchmark {
       val exampleToBenchmark : InferBase = exampleName match {
         case "ImageClassifierExample" =>
           new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
+        case "ObjectDetectionExample" =>
+          new SSDClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
         case _ => throw new Exception("Invalid example name to run")
       }
 

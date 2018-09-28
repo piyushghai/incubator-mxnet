@@ -214,7 +214,7 @@ class ImageClassifierExample(modelPathPrefix: String, inputImagePath: String, in
     ImageClassifier.loadInputBatch(batchFile)
   }
 
-  override def runSingleInference(loadedModel: Classifier, input: Any): Any = {
+  override def runSingleInference(loadedModel: Any, input: Any): Any = {
     // Running inference on single image
     val imageModel = loadedModel.asInstanceOf[ImageClassifier]
     val imgInput = input.asInstanceOf[BufferedImage]
@@ -222,7 +222,7 @@ class ImageClassifierExample(modelPathPrefix: String, inputImagePath: String, in
     output
   }
 
-  override def runBatchInference(loadedModel: Classifier, input: Any): Any = {
+  override def runBatchInference(loadedModel: Any, input: Any): Any = {
     val imageModel = loadedModel.asInstanceOf[ImageClassifier]
     val imgInput = input.asInstanceOf[Traversable[BufferedImage]]
     val output = imageModel.classifyImageBatch(imgInput, Some(5))
