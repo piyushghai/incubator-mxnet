@@ -48,6 +48,7 @@ object ScalaInferenceBenchmark {
   def runInference(objectToRun: InferBase, loadedModel: Classifier,  dataSet: Any, totalRuns: Int):
   List[Long] = {
     var inferenceTimes: List[Long] = List()
+
     for (i <- 1 to totalRuns) {
       val startTimeSingle = System.currentTimeMillis()
       objectToRun.runSingleInference(loadedModel, dataSet)
