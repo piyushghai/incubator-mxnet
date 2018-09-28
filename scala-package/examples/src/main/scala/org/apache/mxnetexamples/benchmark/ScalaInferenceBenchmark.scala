@@ -59,7 +59,6 @@ object ScalaInferenceBenchmark {
   def runBatchInference(objecToRun: InferBase, loadedModel: Classifier, dataSetBatches: List[Any]):
   Any = {
 
-    printf("DataSetbatch size is %d", dataSetBatches.length)
     for (batch <- dataSetBatches) {
       val loadedBatch = objecToRun.loadInputBatch(batch)
       val startTimeSingle = System.currentTimeMillis()
