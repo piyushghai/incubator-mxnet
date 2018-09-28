@@ -16,7 +16,9 @@
  */
 
 package org.apache.mxnetexamples.infer.objectdetector
-
+// scalastyle:off
+import java.awt.image.BufferedImage
+// scalastyle:on
 import java.io.File
 
 import org.apache.mxnet._
@@ -26,6 +28,8 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import java.nio.file.{Files, Paths}
+
+import org.apache.mxnetexamples.InferBase
 
 import scala.collection.mutable.ListBuffer
 
@@ -37,15 +41,6 @@ import scala.collection.mutable.ListBuffer
   * @see <a href="https://github.com/apache/incubator-mxnet/tree/master/scala-package/examples/src/main/scala/org/apache/mxnetexamples/infer/objectdetector" target="_blank">Instructions to run this example</a>
   */
 // scalastyle:on
-class SSDClassifierExample {
-  @Option(name = "--model-path-prefix", usage = "the input model directory and prefix of the model")
-  private val modelPathPrefix: String = "/model/ssd_resnet50_512"
-  @Option(name = "--input-image", usage = "the input image")
-  private val inputImagePath: String = "/images/dog.jpg"
-  @Option(name = "--input-dir", usage = "the input batch of images directory")
-  private val inputImageDir: String = "/images/"
-}
-
 object SSDClassifierExample {
 
   private val logger = LoggerFactory.getLogger(classOf[SSDClassifierExample])
@@ -111,7 +106,7 @@ object SSDClassifierExample {
   }
 
   def main(args: Array[String]): Unit = {
-    val inst = new SSDClassifierExample
+    val inst = new CLIParser
     val parser : CmdLineParser = new CmdLineParser(inst)
     parser.parseArgument(args.toList.asJava)
     val mdprefixDir = inst.modelPathPrefix
@@ -193,4 +188,33 @@ object SSDClassifierExample {
     exist
   }
 
+}
+
+class CLIParser {
+  @Option(name = "--model-path-prefix", usage = "the input model directory and prefix of the model")
+  val modelPathPrefix: String = "/model/ssd_resnet50_512"
+  @Option(name = "--input-image", usage = "the input image")
+  val inputImagePath: String = "/images/dog.jpg"
+  @Option(name = "--input-dir", usage = "the input batch of images directory")
+  val inputImageDir: String = "/images/"
+}
+
+class SSDClassifierExample(modelPathPrefix: String, inputImagePath: String, inputImageDir: String)
+  extends InferBase {
+  override def loadModel(context: Array[Context]): Any = {
+    val dType = DType.Float32
+    val inputShape = Shape(1, 3, 512, 512)
+    val inputDescriptors = IndexedSeq(DataDesc("data", inputShape, dType, "NCHW"))
+    val objDetector = new ObjectDetector(modelPathPrefix, inputDescriptors, context)
+  }
+  override def loadDataSet(): Any = {
+    val img = ImageClassifier.loadImageFromFile(inputImagePath)
+    img
+  }
+
+  override def runInference(loadedModel: Any, input: Any): Any = {
+    val detector = loadedModel.asInstanceOf[ObjectDetector]
+    val imgInput = input.asInstanceOf[BufferedImage]
+    detector.imageObjectDetect(imgInput)
+  }
 }
