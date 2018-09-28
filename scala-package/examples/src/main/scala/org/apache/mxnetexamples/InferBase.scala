@@ -23,7 +23,10 @@ import org.apache.mxnet._
 trait InferBase {
 
   def loadModel(context: Array[Context]): Classifier
-  def loadDataSet(): Any
-  def runInference(loadedModel: Classifier, input: Any): Any
+  def loadSingleData(): Any
+  def loadBatchFileList(batchSize: Int): List[Any]
+  def loadInputBatch(source: Any): Any
+  def runSingleInference(loadedModel: Classifier, input: Any): Any
+  def runBatchInference(loadedModel: Classifier, input: Any): Any
 
 }
