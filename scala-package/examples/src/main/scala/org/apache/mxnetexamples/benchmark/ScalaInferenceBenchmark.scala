@@ -83,8 +83,7 @@ object ScalaInferenceBenchmark {
       val count = inst.count.toString().toInt
 
       val exampleToBenchmark : InferBase = exampleName match {
-//        case "ImageClassifierExample" => new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
-        case "SSDClassifierExample" => new SSDClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
+        case "ImageClassifierExample" => new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
         case _ => throw new Exception("Invalid example name to run")
       }
 

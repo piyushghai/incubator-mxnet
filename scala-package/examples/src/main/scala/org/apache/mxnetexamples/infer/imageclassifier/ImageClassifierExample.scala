@@ -17,13 +17,17 @@
 
 package org.apache.mxnetexamples.infer.imageclassifier
 
+import java.awt.image.BufferedImage
+
 import org.apache.mxnet._
 import org.kohsuke.args4j.{CmdLineParser, Option}
 import org.slf4j.LoggerFactory
-import org.apache.mxnet.infer.ImageClassifier
+import org.apache.mxnet.infer.{Classifier, ImageClassifier}
 
 import scala.collection.JavaConverters._
 import java.io.File
+
+import org.apache.mxnetexamples.InferBase
 
 import scala.collection.mutable.ListBuffer
 
@@ -39,25 +43,13 @@ object ImageClassifierExample {
   private val logger = LoggerFactory.getLogger(classOf[ImageClassifierExample])
 
 
-  def runInferenceOnSingleImage(modelPathPrefix: String, inputImagePath: String,
-                                context: Array[Context]):
+  def runInferenceOnSingleImage(imageClassifierExample: ImageClassifierExample, context: Array[Context]):
   IndexedSeq[IndexedSeq[(String, Float)]] = {
     NDArrayCollector.auto().withScope {
-      val dType = DType.Float32
-      val inputShape = Shape(1, 3, 224, 224)
-
-      val inputDescriptor = IndexedSeq(DataDesc("data", inputShape, dType, "NCHW"))
-
-      // Create object of ImageClassifier class
-      val imgClassifier: ImageClassifier = new
-          ImageClassifier(modelPathPrefix, inputDescriptor, context)
-
-      // Loading single image from file and getting BufferedImage
-      val img = ImageClassifier.loadImageFromFile(inputImagePath)
-
-      // Running inference on single image
-      val output = imgClassifier.classifyImage(img, Some(5))
-      output
+      val model = imageClassifierExample.loadModel(context)
+      val data = imageClassifierExample.loadDataSet()
+      val output = imageClassifierExample.runInference(model, data)
+      output.asInstanceOf[IndexedSeq[IndexedSeq[(String, Float)]]]
     }
   }
 
@@ -108,7 +100,7 @@ object ImageClassifierExample {
   }
 
   def main(args: Array[String]): Unit = {
-    val inst = new ImageClassifierExample
+    val inst = new CLIParser
     val parser: CmdLineParser = new CmdLineParser(inst)
 
     var context = Context.cpu()
@@ -130,7 +122,7 @@ object ImageClassifierExample {
       val inputImageDir = if (inst.inputImageDir == null) System.getenv("MXNET_HOME")
       else inst.inputImageDir
 
-      val singleOutput = runInferenceOnSingleImage(modelPathPrefix, inputImagePath, context)
+      val singleOutput = runInferenceOnSingleImage(new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir), context)
 
       // Printing top 5 class probabilities
       for (i <- singleOutput) {
@@ -157,11 +149,38 @@ object ImageClassifierExample {
   }
 }
 
-class ImageClassifierExample {
+class CLIParser {
   @Option(name = "--model-path-prefix", usage = "the input model directory")
-  private val modelPathPrefix: String = "/resnet-152/resnet-152"
+  val modelPathPrefix: String = "/resnet-152/resnet-152"
   @Option(name = "--input-image", usage = "the input image")
-  private val inputImagePath: String = "/images/kitten.jpg"
+  val inputImagePath: String = "/images/kitten.jpg"
   @Option(name = "--input-dir", usage = "the input batch of images directory")
-  private val inputImageDir: String = "/images/"
+  val inputImageDir: String = "/images/"
+}
+
+class ImageClassifierExample(modelPathPrefix: String, inputImagePath: String, inputImageDir: String) extends InferBase{
+
+  override def loadModel(context: Array[Context]): Classifier = {
+    val dType = DType.Float32
+    val inputShape = Shape(1, 3, 224, 224)
+
+    val inputDescriptor = IndexedSeq(DataDesc("data", inputShape, dType, "NCHW"))
+
+    // Create object of ImageClassifier class
+    val imgClassifier: ImageClassifier = new ImageClassifier(modelPathPrefix, inputDescriptor, context)
+    imgClassifier
+  }
+
+  override def loadDataSet(): Any = {
+    val img = ImageClassifier.loadImageFromFile(inputImagePath)
+    img
+  }
+
+  override def runInference(loadedModel: Classifier, input: Any): Any = {
+    // Running inference on single image
+    val imageModel = loadedModel.asInstanceOf[ImageClassifier]
+    val imgInput = input.asInstanceOf[BufferedImage]
+    val output = imageModel.classifyImage(imgInput, Some(5))
+    output
+  }
 }
