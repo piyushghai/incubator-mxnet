@@ -17,8 +17,6 @@
 
 package org.apache.mxnetexamples.infer.imageclassifier
 
-import java.awt.image.BufferedImage
-
 import org.apache.mxnet._
 import org.kohsuke.args4j.{CmdLineParser, Option}
 import org.slf4j.LoggerFactory
@@ -26,6 +24,9 @@ import org.apache.mxnet.infer.{Classifier, ImageClassifier}
 
 import scala.collection.JavaConverters._
 import java.io.File
+// scalastyle:off
+import java.awt.image.BufferedImage
+// scalastyle:on
 
 import org.apache.mxnetexamples.InferBase
 
@@ -43,7 +44,8 @@ object ImageClassifierExample {
   private val logger = LoggerFactory.getLogger(classOf[ImageClassifierExample])
 
 
-  def runInferenceOnSingleImage(imageClassifierExample: ImageClassifierExample, context: Array[Context]):
+  def runInferenceOnSingleImage(imageClassifierExample: ImageClassifierExample,
+                                context: Array[Context]):
   IndexedSeq[IndexedSeq[(String, Float)]] = {
     NDArrayCollector.auto().withScope {
       val model = imageClassifierExample.loadModel(context)
@@ -122,7 +124,8 @@ object ImageClassifierExample {
       val inputImageDir = if (inst.inputImageDir == null) System.getenv("MXNET_HOME")
       else inst.inputImageDir
 
-      val singleOutput = runInferenceOnSingleImage(new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir), context)
+      val singleOutput = runInferenceOnSingleImage(
+          new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir), context)
 
       // Printing top 5 class probabilities
       for (i <- singleOutput) {
@@ -158,7 +161,8 @@ class CLIParser {
   val inputImageDir: String = "/images/"
 }
 
-class ImageClassifierExample(modelPathPrefix: String, inputImagePath: String, inputImageDir: String) extends InferBase{
+class ImageClassifierExample(modelPathPrefix: String, inputImagePath: String, inputImageDir: String)
+  extends InferBase{
 
   override def loadModel(context: Array[Context]): Classifier = {
     val dType = DType.Float32
