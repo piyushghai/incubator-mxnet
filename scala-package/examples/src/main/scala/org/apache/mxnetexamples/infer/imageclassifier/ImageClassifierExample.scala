@@ -185,16 +185,48 @@ class ImageClassifierExample(modelPathPrefix: String, inputImagePath: String, in
     imgClassifier
   }
 
-  override def loadDataSet(): Any = {
+  override def loadSingleData(): Any = {
     val img = ImageClassifier.loadImageFromFile(inputImagePath)
     img
   }
 
-  override def runInference(loadedModel: Classifier, input: Any): Any = {
+  override def loadBatchFileList(batchSize: Int): List[Any] = {
+    val dir = new File(inputImageDir)
+    require(dir.exists && dir.isDirectory,
+      "input image directory: %s not found".format(inputImageDir))
+    val output = ListBuffer[List[String]]()
+    var batch = ListBuffer[String]()
+    for (imgFile: File <- dir.listFiles()){
+      batch += imgFile.getPath
+      if (batch.length == batchSize) {
+        output += batch.toList
+        batch = ListBuffer[String]()
+      }
+    }
+    if (batch.length > 0) {
+      output += batch.toList
+    }
+    output.toList
+  }
+
+  override def loadInputBatch(inputPaths: Any): Any = {
+    val batchFile = inputPaths.asInstanceOf[List[String]]
+    ImageClassifier.loadInputBatch(batchFile)
+  }
+
+  override def runSingleInference(loadedModel: Classifier, input: Any): Any = {
     // Running inference on single image
     val imageModel = loadedModel.asInstanceOf[ImageClassifier]
     val imgInput = input.asInstanceOf[BufferedImage]
     val output = imageModel.classifyImage(imgInput, Some(5))
     output
   }
+
+  override def runBatchInference(loadedModel: Classifier, input: Any): Any = {
+    val imageModel = loadedModel.asInstanceOf[ImageClassifier]
+    val imgInput = input.asInstanceOf[Traversable[BufferedImage]]
+    val output = imageModel.classifyImageBatch(imgInput, Some(5))
+    output
+  }
+
 }
