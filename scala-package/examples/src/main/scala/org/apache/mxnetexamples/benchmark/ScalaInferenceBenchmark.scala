@@ -21,6 +21,7 @@ import org.apache.mxnetexamples.InferBase
 import org.apache.mxnetexamples.infer.imageclassifier.ImageClassifierExample
 import org.apache.mxnet._
 import org.apache.mxnet.infer.Classifier
+import org.apache.mxnetexamples.infer.objectdetector.SSDClassifierExample
 import org.kohsuke.args4j.{CmdLineParser, Option}
 import org.slf4j.LoggerFactory
 
@@ -28,7 +29,7 @@ import scala.collection.JavaConverters._
 
 object ScalaInferenceBenchmark {
 
-  private val logger = LoggerFactory.getLogger(classOf[ScalaInferenceBenchmark])
+  private val logger = LoggerFactory.getLogger(classOf[CLIParserBase])
 
   def loadModel(objectToRun: InferBase, context: Array[Context]):
   Any = {
@@ -94,41 +95,28 @@ object ScalaInferenceBenchmark {
   }
 
   def main(args: Array[String]): Unit = {
-    val inst = new ScalaInferenceBenchmark
-
-    val parser: CmdLineParser = new CmdLineParser(inst)
 
     var context = Context.cpu()
     if (System.getenv().containsKey("SCALA_TEST_ON_GPU") &&
       System.getenv("SCALA_TEST_ON_GPU").toInt == 1) {
       context = Context.gpu()
     }
-
+    var baseCLI : CLIParserBase = null
     try {
-      parser.parseArgument(args.toList.asJava)
-
-
-      val modelPathPrefix = if (inst.modelPathPrefix == null) System.getenv("MXNET_HOME")
-      else inst.modelPathPrefix
-
-      val inputImagePath = if (inst.inputPath == null) System.getenv("MXNET_HOME")
-      else inst.inputPath
-
-      val inputImageDir = if (inst.inputDir == null) System.getenv("MXNET_HOME")
-      else inst.inputDir
-
-      val exampleName = if (inst.exampleName == null) "ImageClassifierExample"
-      else inst.exampleName
-
-      val count = inst.count.toString().toInt
-
-      val batchSize = inst.batchSize.toString.toInt
-
+      val exampleName = args(1)
       val exampleToBenchmark : InferBase = exampleName match {
-        case "ImageClassifierExample" =>
-          new ImageClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
-        case "ObjectDetectionExample" =>
-          new SSDClassifierExample(modelPathPrefix, inputImagePath, inputImageDir)
+        case "ImageClassifierExample" => {
+          val imParser = new org.apache.mxnetexamples.infer.imageclassifier.CLIParser
+          baseCLI = imParser
+          new CmdLineParser(imParser).parseArgument(args.toList.asJava)
+          new ImageClassifierExample(imParser)
+        }
+        case "ObjectDetectionExample" => {
+          val imParser = new org.apache.mxnetexamples.infer.objectdetector.CLIParser
+          baseCLI = imParser
+          new CmdLineParser(imParser).parseArgument(args.toList.asJava)
+          new SSDClassifierExample(imParser)
+        }
         case _ => throw new Exception("Invalid example name to run")
       }
 
@@ -137,7 +125,7 @@ object ScalaInferenceBenchmark {
       NDArrayCollector.auto().withScope {
         val loadedModel = loadModel(exampleToBenchmark, context)
         val dataSet = loadDataSet(exampleToBenchmark)
-        val inferenceTimes = runInference(exampleToBenchmark, loadedModel, dataSet, count)
+        val inferenceTimes = runInference(exampleToBenchmark, loadedModel, dataSet, baseCLI.count)
         printStatistics(inferenceTimes)
       }
 
@@ -145,7 +133,7 @@ object ScalaInferenceBenchmark {
       // Benchmarking batch inference call
       NDArrayCollector.auto().withScope {
         val loadedModel = loadModel(exampleToBenchmark, context)
-        val batchDataSet = loadBatchDataSet(exampleToBenchmark, batchSize)
+        val batchDataSet = loadBatchDataSet(exampleToBenchmark, baseCLI.batchSize)
         val inferenceTimes = runBatchInference(exampleToBenchmark, loadedModel, batchDataSet)
         printStatistics(inferenceTimes)
       }
@@ -153,27 +141,19 @@ object ScalaInferenceBenchmark {
     } catch {
       case ex: Exception => {
         logger.error(ex.getMessage, ex)
-        parser.printUsage(System.err)
+        new CmdLineParser(baseCLI).printUsage(System.err)
         sys.exit(1)
       }
     }
   }
 
-
 }
 
-class ScalaInferenceBenchmark {
+class CLIParserBase {
   @Option(name = "--example", usage = "The scala example to benchmark")
-  private val exampleName: String = "ImageClassifierExample"
-  @Option(name = "--model-path-prefix", usage = "the input model directory")
-  private val modelPathPrefix: String = "/resnet-152/resnet-152"
-  @Option(name = "--input-data", usage = "the input data path")
-  private val inputPath: String = "/images/kitten.jpg"
-  @Option(name = "--input-dir", usage = "the input directory path for batch inference")
-  private val inputDir: String = "/images/"
+  val exampleName: String = "ImageClassifierExample"
   @Option(name = "--count", usage = "number of times to run inference")
-  private val count: Int = 1000
+  val count: Int = 1000
   @Option(name = "--batchSize", usage = "BatchSize to run batchinference calls")
-  private val batchSize: Int = 10
-
+  val batchSize: Int = 10
 }

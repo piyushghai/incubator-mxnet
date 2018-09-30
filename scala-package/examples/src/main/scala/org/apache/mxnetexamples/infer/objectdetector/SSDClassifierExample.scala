@@ -18,6 +18,8 @@
 package org.apache.mxnetexamples.infer.objectdetector
 // scalastyle:off
 import java.awt.image.BufferedImage
+
+import org.apache.mxnetexamples.benchmark.CLIParserBase
 // scalastyle:on
 import java.io.File
 
@@ -190,7 +192,7 @@ object SSDClassifierExample {
 
 }
 
-class CLIParser {
+class CLIParser extends CLIParserBase {
   @Option(name = "--model-path-prefix", usage = "the input model directory and prefix of the model")
   val modelPathPrefix: String = "/model/ssd_resnet50_512"
   @Option(name = "--input-image", usage = "the input image")
@@ -199,22 +201,26 @@ class CLIParser {
   val inputImageDir: String = "/images/"
 }
 
-class SSDClassifierExample(modelPathPrefix: String, inputImagePath: String, inputImageDir: String)
+class SSDClassifierExample(CLIParser: CLIParser)
   extends InferBase {
   override def loadModel(context: Array[Context]): Any = {
     val dType = DType.Float32
     val inputShape = Shape(1, 3, 512, 512)
     val inputDescriptors = IndexedSeq(DataDesc("data", inputShape, dType, "NCHW"))
-    val objDetector = new ObjectDetector(modelPathPrefix, inputDescriptors, context)
+    new ObjectDetector(CLIParser.modelPathPrefix, inputDescriptors, context)
   }
-  override def loadDataSet(): Any = {
-    val img = ImageClassifier.loadImageFromFile(inputImagePath)
+  override def loadSingleData(): Any = {
+    val img = ImageClassifier.loadImageFromFile(CLIParser.inputImagePath)
     img
   }
 
-  override def runInference(loadedModel: Any, input: Any): Any = {
+  override def runSingleInference(loadedModel: Any, input: Any): Any = {
     val detector = loadedModel.asInstanceOf[ObjectDetector]
     val imgInput = input.asInstanceOf[BufferedImage]
     detector.imageObjectDetect(imgInput)
   }
+  // TODO: Have these functions implemented
+  override def loadInputBatch(source: Any): Any = null
+  override def loadBatchFileList(batchSize: Int): List[Any] = null
+  override def runBatchInference(loadedModel: Any, input: Any): Any = null
 }
