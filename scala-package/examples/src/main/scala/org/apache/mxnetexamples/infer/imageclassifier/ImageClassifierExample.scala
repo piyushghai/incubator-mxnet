@@ -24,6 +24,8 @@ import org.apache.mxnet.infer.{Classifier, ImageClassifier}
 
 import scala.collection.JavaConverters._
 import java.io.File
+
+import org.apache.mxnetexamples.benchmark.CLIParserBase
 // scalastyle:off
 import java.awt.image.BufferedImage
 // scalastyle:on
@@ -162,7 +164,7 @@ object ImageClassifierExample {
   }
 }
 
-class CLIParser {
+class CLIParser extends CLIParserBase{
   @Option(name = "--model-path-prefix", usage = "the input model directory")
   val modelPathPrefix: String = "/resnet-152/resnet-152"
   @Option(name = "--input-image", usage = "the input image")
@@ -171,8 +173,7 @@ class CLIParser {
   val inputImageDir: String = "/images/"
 }
 
-class ImageClassifierExample(modelPathPrefix: String, inputImagePath: String, inputImageDir: String)
-  extends InferBase{
+class ImageClassifierExample(CLIParser: CLIParser) extends InferBase{
 
   override def loadModel(context: Array[Context]): Classifier = {
     val dType = DType.Float32
@@ -181,19 +182,19 @@ class ImageClassifierExample(modelPathPrefix: String, inputImagePath: String, in
     val inputDescriptor = IndexedSeq(DataDesc("data", inputShape, dType, "NCHW"))
 
     // Create object of ImageClassifier class
-    val imgClassifier: ImageClassifier = new ImageClassifier(modelPathPrefix, inputDescriptor, context)
+    val imgClassifier: ImageClassifier = new ImageClassifier(CLIParser.modelPathPrefix, inputDescriptor, context)
     imgClassifier
   }
 
   override def loadSingleData(): Any = {
-    val img = ImageClassifier.loadImageFromFile(inputImagePath)
+    val img = ImageClassifier.loadImageFromFile(CLIParser.inputImagePath)
     img
   }
 
   override def loadBatchFileList(batchSize: Int): List[Any] = {
-    val dir = new File(inputImageDir)
+    val dir = new File(CLIParser.inputImageDir)
     require(dir.exists && dir.isDirectory,
-      "input image directory: %s not found".format(inputImageDir))
+      "input image directory: %s not found".format(CLIParser.inputImageDir))
     val output = ListBuffer[List[String]]()
     var batch = ListBuffer[String]()
     for (imgFile: File <- dir.listFiles()){
