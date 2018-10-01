@@ -46,7 +46,7 @@ object ScalaInferenceBenchmark {
     objectToRun.loadBatchFileList(batchSize)
   }
 
-  def runInference(objectToRun: InferBase, loadedModel: Any,  dataSet: Any, totalRuns: Int):
+  def runInference(objectToRun: InferBase, loadedModel: Any, dataSet: Any, totalRuns: Int):
   List[Long] = {
     var inferenceTimes: List[Long] = List()
     for (i <- 1 to totalRuns) {
@@ -79,7 +79,7 @@ object ScalaInferenceBenchmark {
   def percentile(p: Int, seq: Seq[Long]): Long = {
     val sorted = seq.sorted
     val k = math.ceil((seq.length - 1) * (p / 100.0)).toInt
-    return sorted(k)
+    sorted(k)
   }
 
   def printStatistics(inferenceTimes: List[Long], metricsPrefix: String)  {
@@ -89,7 +89,8 @@ object ScalaInferenceBenchmark {
     val p99 = percentile(99, times)
     val average = times.sum / (times.length * 1.0)
 
-    logger.info("\n%s_latency p99 %d, %s_p50 %d, %s_average %f".format(metricsPrefix, p99, metricsPrefix, p50, metricsPrefix, average))
+    logger.info("\n%s_latency p99 %d, %s_p50 %d, %s_average %f".format(metricsPrefix,
+      p99, metricsPrefix, p50, metricsPrefix, average))
 
   }
 
