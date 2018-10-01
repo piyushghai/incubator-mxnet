@@ -219,8 +219,35 @@ class SSDClassifierExample(CLIParser: CLIParser)
     val imgInput = input.asInstanceOf[BufferedImage]
     detector.imageObjectDetect(imgInput)
   }
-  // TODO: Have these functions implemented
-  override def loadInputBatch(source: Any): Any = null
-  override def loadBatchFileList(batchSize: Int): List[Any] = null
-  override def runBatchInference(loadedModel: Any, input: Any): Any = null
+
+  override def loadInputBatch(inputPaths: Any): Any = {
+    val batchFile = inputPaths.asInstanceOf[List[String]]
+    ImageClassifier.loadInputBatch(batchFile)
+  }
+
+  override def loadBatchFileList(batchSize: Int): List[Any] = {
+    val dir = new File(CLIParser.inputImageDir)
+    require(dir.exists && dir.isDirectory,
+      "input image directory: %s not found".format(CLIParser.inputImageDir))
+    val output = ListBuffer[List[String]]()
+    var batch = ListBuffer[String]()
+    for (imgFile: File <- dir.listFiles()){
+      batch += imgFile.getPath
+      if (batch.length == batchSize) {
+        output += batch.toList
+        batch = ListBuffer[String]()
+      }
+    }
+    if (batch.length > 0) {
+      output += batch.toList
+    }
+    output.toList
+  }
+
+  override def runBatchInference(loadedModel: Any, input: Any): Any = {
+    val model = loadedModel.asInstanceOf[ObjectDetector]
+    val imgInput = input.asInstanceOf[Traversable[BufferedImage]]
+    val output = model.imageBatchObjectDetect(imgInput, Some(5))
+    output
+  }
 }
