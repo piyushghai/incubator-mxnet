@@ -21,6 +21,7 @@ import org.apache.mxnetexamples.InferBase
 import org.apache.mxnetexamples.infer.imageclassifier.ImageClassifierExample
 import org.apache.mxnet._
 import org.apache.mxnetexamples.infer.objectdetector.SSDClassifierExample
+import org.apache.mxnetexamples.rnn.TestCharRnn
 import org.kohsuke.args4j.{CmdLineParser, Option}
 import org.slf4j.LoggerFactory
 
@@ -115,6 +116,12 @@ object ScalaInferenceBenchmark {
           val parsedVals = new CmdLineParser(imParser).parseArgument(args.toList.asJava)
           new SSDClassifierExample(imParser)
         }
+        case "CharRnn" => {
+          val imParser = new org.apache.mxnetexamples.rnn.CLIParser
+          baseCLI = imParser
+          val parsedVals = new CmdLineParser(imParser).parseArgument(args.toList.asJava)
+          new TestCharRnn(imParser)
+        }
         case _ => throw new Exception("Invalid example name to run")
       }
 
@@ -127,13 +134,15 @@ object ScalaInferenceBenchmark {
         printStatistics(inferenceTimes, "single_inference")
       }
 
-      logger.info("Running for batch inference call")
-      // Benchmarking batch inference call
-      NDArrayCollector.auto().withScope {
-        val loadedModel = loadModel(exampleToBenchmark, context)
-        val batchDataSet = loadBatchDataSet(exampleToBenchmark, baseCLI.batchSize)
-        val inferenceTimes = runBatchInference(exampleToBenchmark, loadedModel, batchDataSet)
-        printStatistics(inferenceTimes, "batch_inference")
+      if (baseCLI.batchSize != 0) {
+        logger.info("Running for batch inference call")
+        // Benchmarking batch inference call
+        NDArrayCollector.auto().withScope {
+          val loadedModel = loadModel(exampleToBenchmark, context)
+          val batchDataSet = loadBatchDataSet(exampleToBenchmark, baseCLI.batchSize)
+          val inferenceTimes = runBatchInference(exampleToBenchmark, loadedModel, batchDataSet)
+          printStatistics(inferenceTimes, "batch_inference")
+        }
       }
 
     } catch {
@@ -152,6 +161,6 @@ class CLIParserBase {
   val exampleName: String = "ImageClassifierExample"
   @Option(name = "--count", usage = "number of times to run inference")
   val count: Int = 1000
-  @Option(name = "--batchSize", usage = "BatchSize to run batchinference calls")
-  val batchSize: Int = 10
+  @Option(name = "--batchSize", usage = "BatchSize to run batchinference calls", required = false)
+  val batchSize: Int = 0
 }
