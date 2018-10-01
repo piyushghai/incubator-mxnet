@@ -22,24 +22,25 @@ set -e
 MXNET_ROOT=$(cd "$(dirname $0)/../../../.."; pwd)
 CLASS_PATH=$MXNET_ROOT/scala-package/assembly/osx-x86_64-cpu/target/*:$MXNET_ROOT/scala-package/examples/target/*:$MXNET_ROOT/scala-package/examples/target/classes/lib/*:$MXNET_ROOT/scala-package/infer/target/*
 
-# model dir
-MODEL_PATH_PREFIX=$2
-# input image
-INPUT_IMG=$3
-# which input image dir
-INPUT_DIR=$4
-
 MODEL_NAME=$1
 
-RUNS=$5
+RUNS=$2
 
-BATCHSIZE=$6
+BATCHSIZE=$3
+
+# model dir
+MODEL_PATH_PREFIX=$4
+# input image
+INPUT_IMG=$5
+# which input image dir
+INPUT_DIR=$6
 
 java -Xmx8G -Dmxnet.traceLeakedObjects=true -cp $CLASS_PATH \
 	org.apache.mxnetexamples.benchmark.ScalaInferenceBenchmark \
 	--example $MODEL_NAME \
-	--model-path-prefix $MODEL_PATH_PREFIX \
-	--input-data $INPUT_IMG \
-	--input-dir $INPUT_DIR \
 	--count $RUNS \
-	--batchSize $BATCHSIZE
+	--batchSize $BATCHSIZE \
+	--model-path-prefix $MODEL_PATH_PREFIX \
+	--input-image $INPUT_IMG \
+	--input-dir $INPUT_DIR \
+
