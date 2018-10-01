@@ -20,7 +20,6 @@ package org.apache.mxnetexamples.benchmark
 import org.apache.mxnetexamples.InferBase
 import org.apache.mxnetexamples.infer.imageclassifier.ImageClassifierExample
 import org.apache.mxnet._
-import org.apache.mxnet.infer.Classifier
 import org.apache.mxnetexamples.infer.objectdetector.SSDClassifierExample
 import org.kohsuke.args4j.{CmdLineParser, Option}
 import org.slf4j.LoggerFactory
@@ -46,22 +45,21 @@ object ScalaInferenceBenchmark {
     objectToRun.loadBatchFileList(batchSize)
   }
 
-  def runInference(objectToRun: InferBase, loadedModel: Classifier,  dataSet: Any, totalRuns: Int):
+  def runInference(objectToRun: InferBase, loadedModel: Any,  dataSet: Any, totalRuns: Int):
   List[Long] = {
     var inferenceTimes: List[Long] = List()
-
     for (i <- 1 to totalRuns) {
       val startTimeSingle = System.currentTimeMillis()
       objectToRun.runSingleInference(loadedModel, dataSet)
       val estimatedTimeSingle = System.currentTimeMillis() - startTimeSingle
       inferenceTimes = estimatedTimeSingle :: inferenceTimes
-      printf("Inference time at iteration: %d is : %d \n", i, estimatedTimeSingle)
+      logger.info("Inference time at iteration: %d is : %d \n".format(i, estimatedTimeSingle))
     }
 
     inferenceTimes
   }
 
-  def runBatchInference(objecToRun: InferBase, loadedModel: Classifier, dataSetBatches: List[Any]):
+  def runBatchInference(objecToRun: InferBase, loadedModel: Any, dataSetBatches: List[Any]):
   List[Long] = {
 
     var inferenceTimes: List[Long] = List()
@@ -71,7 +69,7 @@ object ScalaInferenceBenchmark {
       objecToRun.runBatchInference(loadedModel, loadedBatch)
       val estimatedTimeSingle = System.currentTimeMillis() - startTimeSingle
       inferenceTimes = estimatedTimeSingle :: inferenceTimes
-      printf("Batch Inference time is : %d \n", estimatedTimeSingle)
+      logger.info("Batch Inference time is : %d \n".format(estimatedTimeSingle))
     }
 
     inferenceTimes
@@ -83,14 +81,14 @@ object ScalaInferenceBenchmark {
     return sorted(k)
   }
 
-  def printStatistics(inferenceTimes: List[Long])  {
+  def printStatistics(inferenceTimes: List[Long], metricsPrefix: String)  {
 
     val times: Seq[Long] = inferenceTimes
     val p50 = percentile(50, times)
     val p99 = percentile(99, times)
     val average = times.sum / (times.length * 1.0)
 
-    printf("\nLatency p99 %d(ms), p50 %d(ms), average %f(ms)", p99, p50, average)
+    logger.info("\n%s_latency p99 %d, %s_p50 %d, %s_average %f".format(metricsPrefix, p99, metricsPrefix, p50, metricsPrefix, average))
 
   }
 
@@ -108,13 +106,13 @@ object ScalaInferenceBenchmark {
         case "ImageClassifierExample" => {
           val imParser = new org.apache.mxnetexamples.infer.imageclassifier.CLIParser
           baseCLI = imParser
-          new CmdLineParser(imParser).parseArgument(args.toList.asJava)
+          val parsedVals = new CmdLineParser(imParser).parseArgument(args.toList.asJava)
           new ImageClassifierExample(imParser)
         }
         case "ObjectDetectionExample" => {
           val imParser = new org.apache.mxnetexamples.infer.objectdetector.CLIParser
           baseCLI = imParser
-          new CmdLineParser(imParser).parseArgument(args.toList.asJava)
+          val parsedVals = new CmdLineParser(imParser).parseArgument(args.toList.asJava)
           new SSDClassifierExample(imParser)
         }
         case _ => throw new Exception("Invalid example name to run")
@@ -126,7 +124,7 @@ object ScalaInferenceBenchmark {
         val loadedModel = loadModel(exampleToBenchmark, context)
         val dataSet = loadDataSet(exampleToBenchmark)
         val inferenceTimes = runInference(exampleToBenchmark, loadedModel, dataSet, baseCLI.count)
-        printStatistics(inferenceTimes)
+        printStatistics(inferenceTimes, "single_inference")
       }
 
       logger.info("Running for batch inference call")
@@ -135,7 +133,7 @@ object ScalaInferenceBenchmark {
         val loadedModel = loadModel(exampleToBenchmark, context)
         val batchDataSet = loadBatchDataSet(exampleToBenchmark, baseCLI.batchSize)
         val inferenceTimes = runBatchInference(exampleToBenchmark, loadedModel, batchDataSet)
-        printStatistics(inferenceTimes)
+        printStatistics(inferenceTimes, "batch_inference")
       }
 
     } catch {
