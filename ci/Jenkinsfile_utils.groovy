@@ -18,7 +18,8 @@
 // under the License.
 
 // initialize source codes
-def init_git() {
+// Clean - 0: None, 1: xdf, 2: xdff
+def init_git(clean=2) {
   deleteDir()
   retry(5) {
     try {
@@ -26,10 +27,16 @@ def init_git() {
       // retries as this will increase the amount of requests and worsen the throttling
       timeout(time: 15, unit: 'MINUTES') {
         checkout scm
-        sh 'git clean -xdff'
+        if(clean == 0)
+          cleanCmd = 'git status'
+        else if(clean == 1)
+          cleanCmd = 'git clean -xdf'
+        else if(clean == 2)
+          cleanCmd = 'git clean -xdff'
+        sh cleanCmd
         sh 'git reset --hard'
         sh 'git submodule update --init --recursive'
-        sh 'git submodule foreach --recursive git clean -ffxd'
+        sh 'git submodule foreach --recursive ' + cleanCmd
         sh 'git submodule foreach --recursive git reset --hard'
       }
     } catch (exc) {
@@ -64,7 +71,7 @@ def init_git_win() {
 
 // pack libraries for later use
 def pack_lib(name, libs, include_gcov_data = false) {
-  sh """
+  sh returnStatus: true, script: """
 set +e
 echo "Packing ${libs} into ${name}"
 echo ${libs} | sed -e 's/,/ /g' | xargs md5sum
@@ -80,10 +87,10 @@ return 0
 }
 
 // unpack libraries saved before
-def unpack_and_init(name, libs, include_gcov_data = false) {
-  init_git()
+def unpack_and_init(name, libs, include_gcov_data = false, clean = 2) {
+  init_git(clean)
   unstash name
-  sh """
+  sh returnStatus: true, script: """
 set +e
 echo "Unpacked ${libs} from ${name}"
 echo ${libs} | sed -e 's/,/ /g' | xargs md5sum
@@ -147,8 +154,9 @@ def collect_test_results_windows(original_file_name, new_file_name) {
 }
 
 
-def docker_run(platform, function_name, use_nvidia, shared_mem = '500m') {
-  def command = "ci/build.py --docker-registry ${env.DOCKER_CACHE_REGISTRY} %USE_NVIDIA% --platform %PLATFORM% --docker-build-retries 3 --shm-size %SHARED_MEM% /work/runtime_functions.sh %FUNCTION_NAME%"
+def docker_run(platform, function_name, use_nvidia, shared_mem = '500m', env_vars = "") {
+  def command = "ci/build.py %ENV_VARS% --docker-registry ${env.DOCKER_CACHE_REGISTRY} %USE_NVIDIA% --platform %PLATFORM% --docker-build-retries 3 --shm-size %SHARED_MEM% /work/runtime_functions.sh %FUNCTION_NAME%"
+  command = command.replaceAll('%ENV_VARS%', env_vars.length() > 0 ? "-e ${env_vars}" : '')
   command = command.replaceAll('%USE_NVIDIA%', use_nvidia ? '--nvidiadocker' : '')
   command = command.replaceAll('%PLATFORM%', platform)
   command = command.replaceAll('%FUNCTION_NAME%', function_name)
