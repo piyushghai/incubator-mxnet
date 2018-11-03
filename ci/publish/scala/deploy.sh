@@ -32,7 +32,7 @@ then
 fi
 
 # Run python to configure keys
-python3 $PWD/scala-package/dev/buildkey.py
+python3 ci/publish/scala/buildkey.py
 
 # Updating cache
 mkdir -p ~/.gnupg

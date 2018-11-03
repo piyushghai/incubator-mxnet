@@ -18,6 +18,6 @@
 
 set -ex
 
-# Test
-cd scala-package/packageTest
-make scalaintegrationtestlocal CI=1
+./ci/publish/scala/build.sh
+./ci/publish/scala/test.sh
+./ci/publish/scala/deploy.sh

@@ -1181,7 +1181,7 @@ publish_scala_build() {
     set -ex
     pushd .
     scala_prepare
-    ./scala-package/dev/build.sh
+    ./ci/publish/scala/build.sh
     popd
 }
 
@@ -1189,7 +1189,7 @@ publish_scala_test() {
     set -ex
     pushd .
     scala_prepare
-    ./scala-package/dev/test.sh
+    ./ci/publish/scala/test.sh
     popd
 }
 
@@ -1197,7 +1197,7 @@ publish_scala_deploy() {
     set -ex
     pushd .
     scala_prepare
-    ./scala-package/dev/deploy.sh
+    ./ci/publish/scala/deploy.sh
     popd
 }
 
