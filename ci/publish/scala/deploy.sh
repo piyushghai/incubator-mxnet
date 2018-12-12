@@ -31,8 +31,10 @@ then
     MAKE_FLAGS="USE_OPENCV=1 USE_BLAS=openblas USE_CUDA=1 USE_CUDA_PATH=/usr/local/cuda USE_CUDNN=1 SCALA_ON_GPU=1 SCALA_TEST_ON_GPU=1 USE_DIST_KVSTORE=1 ENABLE_TESTCOVERAGE=1"
 fi
 
-# Run python to configure keys
-python3 ci/publish/scala/buildkey.py
+# On Jenkins, run python script to configure keys
+if [[ $BUILD_ID ]]; then
+    python3 ci/publish/scala/buildkey.py
+fi
 
 # Updating cache
 mkdir -p ~/.gnupg

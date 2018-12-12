@@ -662,14 +662,14 @@ scalarelease-perform:
 
 scaladeploy:
 	(cd $(ROOTDIR)/scala-package && \
-		mvn deploy $(MAVEN_ARGS) -Papache-release,$(SCALA_PKG_PROFILE),$(SCALA_VERSION_PROFILE) \-DskipTests=true -Dcxx="$(CXX)" \
+		mvn deploy $(MAVEN_ARGS) -P$(SCALA_PKG_PROFILE),$(SCALA_VERSION_PROFILE) \-DskipTests=true -Dcxx="$(CXX)" \
 		    -Dbuild.platform="$(SCALA_PKG_PROFILE)" \
 			-Dcflags="$(CFLAGS)" -Dldflags="$(LDFLAGS)" \
 			-Dlddeps="$(LIB_DEP) $(ROOTDIR)/lib/libmxnet.a")
 
 scaladeploylocal:
 	(cd $(ROOTDIR)/scala-package && \
-		mvn deploy $(MAVEN_ARGS) -Papache-release,deployLocal,$(SCALA_PKG_PROFILE),$(SCALA_VERSION_PROFILE) \-DskipTests=true -Dcxx="$(CXX)" \
+		mvn deploy $(MAVEN_ARGS) -PdeployLocal,$(SCALA_PKG_PROFILE),$(SCALA_VERSION_PROFILE) \-DskipTests=true -Dcxx="$(CXX)" \
 		  -DaltDeploymentRepository=snapshot-repo::default::file:local-snapshot \
 		  -Dgpg.skip \
 		  -Dbuild.platform="$(SCALA_PKG_PROFILE)" \
