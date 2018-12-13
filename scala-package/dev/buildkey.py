@@ -76,22 +76,22 @@ def importASC(key, gpgPassphrase):
     filename = os.path.join(KEY_PATH, "key.asc")
     with open(filename, 'w') as f:
         f.write(key)
-    subprocess.call(['gpg2', '--batch', '--yes',
+    subprocess.run(['gpg2', '--batch', '--yes',
                     '--passphrase-fd', '0',
                     "--import", "{}".format(filename)],
                    input=str.encode(gpgPassphrase))
 
 
 def encryptMasterPSW(password):
-    result = subprocess.check_output(['mvn', '--encrypt-master-password'],
-                                     input=str.encode(password))
-    return str(result)[2:-3]
+    result = subprocess.run(['mvn', '--encrypt-master-password'],
+                            stdout=subprocess.PIPE, input=str.encode(password))
+    return str(result.stdout)[2:-3]
 
 
 def encryptPSW(password):
-    result = subprocess.check_output(['mvn', '--encrypt-password'],
-                                     input=str.encode(password))
-    return str(result)[2:-3]
+    result = subprocess.run(['mvn', '--encrypt-password'],
+                            stdout=subprocess.PIPE, input=str.encode(password))
+    return str(result.stdout)[2:-3]
 
 
 def masterPSW(password):
@@ -111,13 +111,13 @@ xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.o
 <servers>
 <server>
         <id>apache.snapshots.https</id>
-        <username>FIXME{}</username>
+        <username>{}</username>
         <password>{}</password>
 </server>
 <!-- To stage a release of some part of Maven -->
 <server>
         <id>apache.releases.https</id>
-        <username>FIXME{}</username>
+        <username>{}</username>
         <password>{}</password>
 </server>
 </servers>

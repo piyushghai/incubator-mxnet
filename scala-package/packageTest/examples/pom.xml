@@ -21,6 +21,18 @@
           <skipTests>false</skipTests>
         </properties>
       </profile>
+      <profile>
+        <id>fromLocal</id>
+        <repositories>
+          <repository>
+            <id>local-snapshot-examples</id>
+            <url>file://${basedir}/../../local-snapshot</url>
+            <snapshots>
+              <enabled>true</enabled>
+            </snapshots>
+          </repository>
+        </repositories>
+      </profile>
     </profiles>
 
     <build>

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DIR="$SCRIPT_PATH/dependencies"
+DIR=$PWD/tools/dependencies
 
 if [[ $PLATFORM == 'linux' ]]; then
     set -x

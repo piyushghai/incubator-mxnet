@@ -4,12 +4,12 @@ if [ $# -lt 1 ]; then
     >&2 echo "Usage: source set_environment.sh <VARIANT> <TARGET>"
 fi
 echo $PWD
-export DEPS_PATH=$PWD/deps
-export SCRIPT_PATH=$PWD/scripts
+export CURDIR=$PWD
+export DEPS_PATH=$PWD/staticdeps
 export VARIANT=$(echo $1 | tr '[:upper:]' '[:lower:]')
 export TARGET=$(echo $2 | tr '[:upper:]' '[:lower:]')
 export PLATFORM=$(uname | tr '[:upper:]' '[:lower:]')
-export MAKE_CONFIG=config/${TARGET}_${PLATFORM}_${VARIANT}.mk
+export MAKE_CONFIG=make/${TARGET}/${TARGET}_${PLATFORM}_${VARIANT}.mk
 if [[ ! -f $MAKE_CONFIG ]]; then
     >&2 echo "Couldn't find make config $MAKE_CONFIG for the current settings."
     exit 1
@@ -55,14 +55,8 @@ export PKG_CONFIG_PATH=$DEPS_PATH/lib/pkgconfig:$DEPS_PATH/lib64/pkgconfig:$DEPS
 export CPATH=$DEPS_PATH/include:$CPATH
 export PATH=/usr/local/opt/gnupg@1.4/libexec/gpgbin:$PATH
 
-function build_dependencies() { source scripts/build_dependencies.sh; }
-function build_modules() { source scripts/build_dependencies.sh && scripts/build_modules.sh; }
-function build_lib() { source scripts/build_dependencies.sh && scripts/build_modules.sh && scripts/build_lib.sh; }
-function all_steps() {
-    source scripts/build_dependencies.sh && scripts/build_modules.sh && scripts/build_lib.sh;
-    if [[ ! $DEPENDENCIES_ONLY == true ]]; then
-        scripts/build_scalapkg.sh && scripts/deploy.sh;
-    fi
-}
+function build_dependencies() { source ci/publish/static/build_dependencies.sh; }
+function build_modules() { source ci/publish/static/build_dependencies.sh && ci/publish/static/build_modules.sh; }
+function build_lib() { source ci/publish/static/build_dependencies.sh && ci/publish/static/build_modules.sh && ci/publish/static/build_lib.sh; }
 
 env

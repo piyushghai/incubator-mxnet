@@ -36,6 +36,8 @@ Test the snapshot repo using `make testsnapshot` or a different repo using `make
 
 You are able to run unit tests, integration tests, or both using this utility. To run the unit tests, add the flag `UNIT=1` to make (e.g. `make testsnapshot UNIT=1`). Use `INTEGRATION=1` for integration tests. The default behavior is to run both the unit and integration tests. However, the integration tests require that the mxnet examples be installed in addition to the full mxnet package (see test mode instructions above).
 
+For running on GPU, add the flag `USE_CUDA=1`.
+
 An additional option, you can specify the mxnet version with `MXNET_VERSION=1.3.1-SNAPSHOT`.
 
 ## Cleaning Up

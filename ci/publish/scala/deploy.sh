@@ -18,19 +18,6 @@
 
 set -ex
 
-# Setup Environment Variables
-# MAVEN_PUBLISH_OS_TYPE: linux-x86_64-cpu|linux-x86_64-gpu|osx-x86_64-cpu
-# export MAVEN_PUBLISH_OS_TYPE=linux-x86_64-cpu
-
-
-if [[ $MAVEN_PUBLISH_OS_TYPE == "linux-x86_64-cpu" ]];
-then
-    MAKE_FLAGS="USE_BLAS=openblas USE_DIST_KVSTORE=1 ENABLE_TESTCOVERAGE=1"
-elif [[ $MAVEN_PUBLISH_OS_TYPE == "linux-x86_64-gpu" ]]
-then
-    MAKE_FLAGS="USE_OPENCV=1 USE_BLAS=openblas USE_CUDA=1 USE_CUDA_PATH=/usr/local/cuda USE_CUDNN=1 SCALA_ON_GPU=1 SCALA_TEST_ON_GPU=1 USE_DIST_KVSTORE=1 ENABLE_TESTCOVERAGE=1"
-fi
-
 # On Jenkins, run python script to configure keys
 if [[ $BUILD_ID ]]; then
     python3 ci/publish/scala/buildkey.py

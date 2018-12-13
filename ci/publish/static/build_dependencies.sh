@@ -5,9 +5,9 @@ mkdir -p $DEPS_PATH
 
 # Set up shared dependencies:
 if [[ $DEBUG -eq 1 ]]; then
-    source scripts/make_shared_dependencies.sh
+    source ci/publish/static/make_shared_dependencies.sh
 else
-    source scripts/make_shared_dependencies.sh > /dev/null
+    source ci/publish/static/make_shared_dependencies.sh > /dev/null
 fi
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$(dirname $(find $DEPS_PATH -type f -name 'libprotoc*' | grep protobuf | head -n 1)):$DEPS_PATH/lib
 
@@ -25,9 +25,9 @@ if [[ $PLATFORM == 'linux' ]]; then
     if [[ $VARIANT == cu* ]]; then
         # download and install cuda and cudnn, and set paths
         if [[ $DEBUG -eq 1 ]]; then
-            source scripts/setup_gpu_build_tools.sh
+            source ci/publish/static/setup_gpu_build_tools.sh
         else
-            source scripts/setup_gpu_build_tools.sh > /dev/null
+            source ci/publish/static/setup_gpu_build_tools.sh > /dev/null
         fi
     fi
 fi

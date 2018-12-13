@@ -22,12 +22,13 @@ set -ex
 # MAVEN_PUBLISH_OS_TYPE: linux-x86_64-cpu|linux-x86_64-gpu|osx-x86_64-cpu
 # export MAVEN_PUBLISH_OS_TYPE=linux-x86_64-cpu
 
-bash scala-package/dev/compile-mxnet-backend.sh $MAVEN_PUBLISH_OS_TYPE ./
+source tools/staticbuild/build.sh $mxnet_variant maven
 
+set -ex
 # Scala steps to deploy
 make scalapkg CI=1
-make scalaunittest CI=1
-make scalaintegrationtest CI=1
+# make scalaunittest CI=1
+# make scalaintegrationtest CI=1
 
 # Compile tests for discovery later
 export GPG_TTY=$(tty)

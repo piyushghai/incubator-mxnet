@@ -33,4 +33,7 @@ apt-get install -y \
     software-properties-common \
     sudo \
     unzip \
+    gnupg \
+    gnupg2 \
+    gnupg-agent \
     wget

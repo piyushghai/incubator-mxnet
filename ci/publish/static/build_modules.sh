@@ -3,21 +3,14 @@ if [[ $PLATFORM == 'linux' ]]; then
     set -x
 fi
 
-# If a travis build is from a tag, use this tag for fetching the corresponding release
-if [[ ! -z $TRAVIS_TAG ]]; then
-    GIT_ADDITIONAL_FLAGS="-b $(echo $TRAVIS_TAG | sed 's/^patch-[^-]*-//g')"
-fi
-
-rm -rf mxnet-build
-git clone --recursive https://github.com/dmlc/mxnet mxnet-build $GIT_ADDITIONAL_FLAGS
-DMLC_CORE_COMMIT=$(cd mxnet-build/3rdparty/dmlc-core; git rev-parse HEAD)
-NNVM_COMMIT=$(cd mxnet-build/3rdparty/tvm/nnvm; git rev-parse HEAD)
-PS_COMMIT=$(cd mxnet-build/3rdparty/ps-lite; git rev-parse HEAD)
-MKLDNN_COMMIT=$(cd mxnet-build/3rdparty/mkldnn; git rev-parse HEAD)
+git submodule update --init --recursive || true
+DMLC_CORE_COMMIT=$(cd 3rdparty/dmlc-core; git rev-parse HEAD)
+NNVM_COMMIT=$(cd 3rdparty/tvm/nnvm; git rev-parse HEAD)
+PS_COMMIT=$(cd 3rdparty/ps-lite; git rev-parse HEAD)
+MKLDNN_COMMIT=$(cd 3rdparty/mkldnn; git rev-parse HEAD)
 
 >&2 echo "Now building mxnet modules..."
-cp $MAKE_CONFIG mxnet-build/config.mk
-cd mxnet-build
+cp $MAKE_CONFIG config.mk
 
 if [[ ! -f $HOME/.mxnet/dmlc-core/$DMLC_CORE_COMMIT/libdmlc.a ]]; then
     $MAKE DEPS_PATH=$DEPS_PATH DMLCCORE
@@ -70,5 +63,3 @@ if [[ $VARIANT == *mkl ]]; then
         cp 3rdparty/mkldnn/install/$MKLDNN_LICENSE lib
     fi
 fi
-
-cd ../

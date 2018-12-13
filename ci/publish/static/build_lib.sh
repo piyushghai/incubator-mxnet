@@ -3,19 +3,10 @@ if [[ $PLATFORM == 'linux' ]]; then
     set -x
 fi
 
-# If a travis build is from a tag, use this tag for fetching the corresponding release
-if [[ ! -z $TRAVIS_TAG ]]; then
-    GIT_ADDITIONAL_FLAGS="-b $(echo $TRAVIS_TAG | sed 's/^patch-[^-]*-//g')"
-fi
-
-# assuming already checked out in previous step
-# rm -rf mxnet-build
-# git clone --recursive https://github.com/dmlc/mxnet mxnet-build $GIT_ADDITIONAL_FLAGS
-MXNET_COMMIT=$(cd mxnet-build; git rev-parse HEAD)
+MXNET_COMMIT=$(git rev-parse HEAD)
 
 >&2 echo "Now building mxnet..."
-cp $MAKE_CONFIG mxnet-build/config.mk
-cd mxnet-build
+cp $MAKE_CONFIG config.mk
 
 if [[ ! -f $HOME/.mxnet/mxnet/$MXNET_COMMIT/libmxnet.a ]] || [[ ! -f $HOME/.mxnet/mxnet/$MXNET_COMMIT/libmxnet.so ]]; then
     $MAKE DEPS_PATH=$DEPS_PATH || exit 1;
@@ -57,4 +48,4 @@ fi
 echo "Libraries in lib path"
 ls -al lib
 
-cd ../
+ln -s staticdeps/ deps
