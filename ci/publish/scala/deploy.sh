@@ -38,5 +38,5 @@ cd ..
 # echo "\n\n$VERSION\n" | make scalarelease-dryrun $MAKE_FLAGS
 make scaladeploy $MAKE_FLAGS CI=1
 
-# Clear all password .xml files, gpg key files, and all imported gpg secret keys
-rm -rf ~/.m2/*.xml ~/.m2/key.asc
+# Clear all password .xml files, exp files, and gpg key files
+rm -rf ~/.m2/*.xml ~/.m2/key.asc ~/.m2/*.exp

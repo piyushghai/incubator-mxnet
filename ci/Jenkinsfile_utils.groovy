@@ -18,8 +18,7 @@
 // under the License.
 
 // initialize source codes
-// Clean - 0: None, 1: xdf, 2: xdff
-def init_git(clean=2) {
+def init_git() {
   deleteDir()
   retry(5) {
     try {
@@ -27,16 +26,10 @@ def init_git(clean=2) {
       // retries as this will increase the amount of requests and worsen the throttling
       timeout(time: 15, unit: 'MINUTES') {
         checkout scm
-        if(clean == 0)
-          cleanCmd = 'git status'
-        else if(clean == 1)
-          cleanCmd = 'git clean -xdf'
-        else if(clean == 2)
-          cleanCmd = 'git clean -xdff'
-        sh cleanCmd
+        sh 'git clean -xdff'
         sh 'git reset --hard'
         sh 'git submodule update --init --recursive'
-        sh 'git submodule foreach --recursive ' + cleanCmd
+        sh 'git submodule foreach --recursive git clean -ffxd'
         sh 'git submodule foreach --recursive git reset --hard'
       }
     } catch (exc) {
@@ -87,8 +80,8 @@ return 0
 }
 
 // unpack libraries saved before
-def unpack_and_init(name, libs, include_gcov_data = false, clean = 2) {
-  init_git(clean)
+def unpack_and_init(name, libs, include_gcov_data = false) {
+  init_git()
   unstash name
   sh returnStatus: true, script: """
 set +e

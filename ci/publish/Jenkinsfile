@@ -56,7 +56,7 @@ for (x in labels) {
   def label = x // Required due to language
   toBuild["Scala Build ${label}"] = wrapStep(nodeMap['cpu'], "build-scala-${label}") {
     withEnv(["MAVEN_PUBLISH_OS_TYPE=${scalaOSMap[label]}", "mxnet_variant=${scalaVariantMap[label]}"]) {
-      utils.init_git(0)
+      utils.init_git()
       utils.docker_run("publish.ubuntu1404_cpu", 'publish_scala_build', false, '500m', 'MAVEN_PUBLISH_OS_TYPE mxnet_variant')
       utils.pack_lib("scala_${label}", mx_scala_pub, false)
     }
@@ -71,7 +71,7 @@ for (x in labels) {
     def system = y // Required due to language
     toTest["Scala Test ${system} ${label}"] = wrapStep(nodeMap[label], "test-scala-${system}-${label}") {
       withEnv(["mxnet_variant=${scalaVariantMap[label]}"]) {
-        utils.unpack_and_init("scala_${label}", mx_scala_pub, false, 0)
+        utils.unpack_and_init("scala_${label}", mx_scala_pub, false)
         utils.docker_run("publish.test.${system}_${label}", 'publish_scala_test', label == 'gpu', '500m', 'mxnet_variant')
       }
     }
@@ -83,7 +83,7 @@ for (x in labels) {
   def label = x // Required due to language
   toDeploy["Scala Deploy ${label}"] = wrapStep(nodeMap['cpu'], "deploy-scala-${label}") {
     withEnv(["MAVEN_PUBLISH_OS_TYPE=${scalaOSMap[label]}", "mxnet_variant=${scalaVariantMap[label]}"]) {
-      utils.unpack_and_init("scala_${label}", mx_scala_pub, false, 0)
+      utils.unpack_and_init("scala_${label}", mx_scala_pub, false)
       utils.docker_run("publish.ubuntu1604_${label}", 'publish_scala_deploy', false, '500m', 'MAVEN_PUBLISH_OS_TYPE MAVEN_PUBLISH_SECRET_ENDPOINT_URL MAVEN_PUBLISH_SECRET_NAME_CREDENTIALS MAVEN_PUBLISH_SECRET_NAME_GPG DOCKERHUB_SECRET_ENDPOINT_REGION mxnet_variant')
     }
   }
