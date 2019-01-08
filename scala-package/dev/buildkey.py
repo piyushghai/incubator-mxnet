@@ -76,22 +76,36 @@ def importASC(key, gpgPassphrase):
     filename = os.path.join(KEY_PATH, "key.asc")
     with open(filename, 'w') as f:
         f.write(key)
-    subprocess.run(['gpg2', '--batch', '--yes',
+    subprocess.check_output(['gpg2', '--batch', '--yes',
                     '--passphrase-fd', '0',
                     "--import", "{}".format(filename)],
                    input=str.encode(gpgPassphrase))
 
 
 def encryptMasterPSW(password):
-    result = subprocess.run(['mvn', '--encrypt-master-password'],
-                            stdout=subprocess.PIPE, input=str.encode(password))
-    return str(result.stdout)[2:-3]
+    filename = os.path.join(KEY_PATH, "encryptMasterPassword.exp")
+    with open(filename, 'w') as f:
+        f.write('''
+        spawn mvn --encrypt-master-password
+        expect -exact "Master password: "
+        send -- "{}\r"
+        expect eof
+        '''.format(password))
+    result = subprocess.check_output(['expect', filename])
+    return str(result).split('\r\n')[-1][2:-3]
 
 
 def encryptPSW(password):
-    result = subprocess.run(['mvn', '--encrypt-password'],
-                            stdout=subprocess.PIPE, input=str.encode(password))
-    return str(result.stdout)[2:-3]
+    filename = os.path.join(KEY_PATH, "encryptPassword.exp")
+    with open(filename, 'w') as f:
+        f.write('''
+        spawn mvn --encrypt-password
+        expect -exact "Password: "
+        send -- "{}\r"
+        expect eof
+        '''.format(password))
+    result = subprocess.check_output(['expect', filename])
+    return str(result).split('\r\n')[-1][2:-3]
 
 
 def masterPSW(password):
