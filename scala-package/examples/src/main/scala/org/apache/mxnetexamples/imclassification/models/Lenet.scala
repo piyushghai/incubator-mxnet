@@ -17,7 +17,6 @@
 
 package org.apache.mxnetexamples.imclassification.models
 
-import org.apache.mxnet.DType.DType
 import org.apache.mxnet._
 
 object Lenet {
@@ -27,8 +26,8 @@ object Lenet {
     * @param numClasses Number of classes to classify into
     * @return model symbol
     */
-  def getSymbol(numClasses: Int, dtype: DType = DType.Float32): Symbol = {
-    val data = Symbol.Variable("data", dType = dtype)
+  def getSymbol(numClasses: Int): Symbol = {
+    val data = Symbol.Variable("data")
     // first conv
     val conv1 = Symbol.api.Convolution(data = Some(data), kernel = Shape(5, 5), num_filter = 20)
     val tanh1 = Symbol.api.tanh(data = Some(conv1))

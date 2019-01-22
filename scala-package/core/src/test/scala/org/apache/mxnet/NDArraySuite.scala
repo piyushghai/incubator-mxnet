@@ -21,7 +21,7 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 import org.apache.mxnet.NDArrayConversions._
-import org.scalatest.{BeforeAndAfterAll, FunSuite, Matchers}
+import org.scalatest.{Matchers, BeforeAndAfterAll, FunSuite}
 
 class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
   private val sequence: AtomicInteger = new AtomicInteger(0)
@@ -29,9 +29,6 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
   test("to java array") {
     val ndarray = NDArray.zeros(2, 2)
     assert(ndarray.toArray === Array(0f, 0f, 0f, 0f))
-
-    val float64Array = NDArray.zeros(Shape(2, 2), dtype = DType.Float64)
-    assert(float64Array.toFloat64Array === Array(0d, 0d, 0d, 0d))
   }
 
   test("to scalar") {
@@ -41,17 +38,8 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     assert(ndones.toScalar === 1f)
   }
 
-  test("to float 64 scalar") {
-    val ndzeros = NDArray.zeros(Shape(1), dtype = DType.Float64)
-    assert(ndzeros.toFloat64Scalar === 0d)
-    val ndones = NDArray.ones(Shape(1), dtype = DType.Float64)
-    assert(ndones.toFloat64Scalar === 1d)
-  }
-
   test ("call toScalar on an ndarray which is not a scalar") {
     intercept[Exception] { NDArray.zeros(1, 1).toScalar }
-    intercept[Exception] { NDArray.zeros(shape = Shape (1, 1),
-      dtype = DType.Float64).toFloat64Scalar }
   }
 
   test("size and shape") {
@@ -63,20 +51,12 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
   test("dtype") {
     val arr = NDArray.zeros(3, 2)
     assert(arr.dtype === DType.Float32)
-
-    val float64Array = NDArray.zeros(shape = Shape(3, 2), dtype = DType.Float64)
-    assert(float64Array.dtype === DType.Float64)
   }
 
   test("set scalar value") {
     val ndarray = NDArray.empty(2, 1)
     ndarray.set(10f)
     assert(ndarray.toArray === Array(10f, 10f))
-
-    val float64array = NDArray.empty(shape = Shape(2, 1), dtype = DType.Float64)
-    float64array.set(10d)
-    assert(float64array.toFloat64Array === Array(10d, 10d))
-
   }
 
   test("copy from java array") {
@@ -86,29 +66,19 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
   }
 
   test("plus") {
-    var ndzeros = NDArray.zeros(2, 1)
-    var ndones = ndzeros + 1f
+    val ndzeros = NDArray.zeros(2, 1)
+    val ndones = ndzeros + 1f
     assert(ndones.toArray === Array(1f, 1f))
     assert((ndones + ndzeros).toArray === Array(1f, 1f))
     assert((1 + ndones).toArray === Array(2f, 2f))
     // in-place
     ndones += ndones
     assert(ndones.toArray === Array(2f, 2f))
-
-    // Float64 method test
-    ndzeros = NDArray.zeros(shape = Shape(2, 1), dtype = DType.Float64)
-    ndones = ndzeros + 1d
-    assert(ndones.toFloat64Array === Array(1d, 1d))
-    assert((ndones + ndzeros).toFloat64Array === Array(1d, 1d))
-    assert((1d + ndones).toArray === Array(2d, 2d))
-    // in-place
-    ndones += ndones
-    assert(ndones.toFloat64Array === Array(2d, 2d))
   }
 
   test("minus") {
-    var ndones = NDArray.ones(2, 1)
-    var ndzeros = ndones - 1f
+    val ndones = NDArray.ones(2, 1)
+    val ndzeros = ndones - 1f
     assert(ndzeros.toArray === Array(0f, 0f))
     assert((ndones - ndzeros).toArray === Array(1f, 1f))
     assert((ndzeros - ndones).toArray === Array(-1f, -1f))
@@ -116,46 +86,23 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     // in-place
     ndones -= ndones
     assert(ndones.toArray === Array(0f, 0f))
-
-    // Float64 methods test
-    ndones = NDArray.ones(shape = Shape(2, 1))
-    ndzeros = ndones - 1d
-    assert(ndzeros.toFloat64Array === Array(0d, 0d))
-    assert((ndones - ndzeros).toFloat64Array === Array(1d , 1d))
-    assert((ndzeros - ndones).toFloat64Array === Array(-1d , -1d))
-    assert((ndones - 1).toFloat64Array === Array(0d, 0d))
-    // in-place
-    ndones -= ndones
-    assert(ndones.toArray === Array(0d, 0d))
-
   }
 
   test("multiplication") {
-    var ndones = NDArray.ones(2, 1)
-    var ndtwos = ndones * 2
+    val ndones = NDArray.ones(2, 1)
+    val ndtwos = ndones * 2
     assert(ndtwos.toArray === Array(2f, 2f))
     assert((ndones * ndones).toArray === Array(1f, 1f))
     assert((ndtwos * ndtwos).toArray === Array(4f, 4f))
     ndtwos *= ndtwos
     // in-place
     assert(ndtwos.toArray === Array(4f, 4f))
-
-    // Float64 methods test
-    ndones = NDArray.ones(shape = Shape(2, 1), dtype = DType.Float64)
-    ndtwos = ndones * 2d
-    assert(ndtwos.toFloat64Array === Array(2d, 2d))
-    assert((ndones * ndones).toFloat64Array === Array(1d, 1d))
-    assert((ndtwos * ndtwos).toFloat64Array === Array(4d, 4d))
-    ndtwos *= ndtwos
-    // in-place
-    assert(ndtwos.toFloat64Array === Array(4d, 4d))
-
   }
 
   test("division") {
-    var ndones = NDArray.ones(2, 1)
-    var ndzeros = ndones - 1f
-    var ndhalves = ndones / 2
+    val ndones = NDArray.ones(2, 1)
+    val ndzeros = ndones - 1f
+    val ndhalves = ndones / 2
     assert(ndhalves.toArray === Array(0.5f, 0.5f))
     assert((ndhalves / ndhalves).toArray === Array(1f, 1f))
     assert((ndones / ndones).toArray === Array(1f, 1f))
@@ -163,75 +110,37 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     ndhalves /= ndhalves
     // in-place
     assert(ndhalves.toArray === Array(1f, 1f))
-
-    // Float64 methods test
-    ndones = NDArray.ones(shape = Shape (2, 1), dtype = DType.Float64)
-    ndzeros = ndones - 1d
-    ndhalves = ndones / 2d
-    assert(ndhalves.toFloat64Array === Array(0.5d, 0.5d))
-    assert((ndhalves / ndhalves).toFloat64Array === Array(1d, 1d))
-    assert((ndones / ndones).toFloat64Array === Array(1d, 1d))
-    assert((ndzeros / ndones).toFloat64Array === Array(0d, 0d))
-    ndhalves /= ndhalves
-    // in-place
-    assert(ndhalves.toFloat64Array === Array(1d, 1d))
   }
 
   test("full") {
-    var arr = NDArray.full(Shape(1, 2), 3f)
+    val arr = NDArray.full(Shape(1, 2), 3f)
     assert(arr.shape === Shape(1, 2))
     assert(arr.toArray === Array(3f, 3f))
-
-    // Float64 methods test
-    arr = NDArray.full(Shape(1, 2), value = 5d, Context.cpu())
-    assert(arr.toFloat64Array === Array (5d, 5d))
   }
 
   test("clip") {
-    var ndarray = NDArray.empty(3, 2)
+    val ndarray = NDArray.empty(3, 2)
     ndarray.set(Array(1f, 2f, 3f, 4f, 5f, 6f))
     assert(NDArray.clip(ndarray, 2f, 5f).toArray === Array(2f, 2f, 3f, 4f, 5f, 5f))
-
-    // Float64 methods test
-    ndarray = NDArray.empty(shape = Shape(3, 2), dtype = DType.Float64)
-    ndarray.set(Array(1d, 2d, 3d, 4d, 5d, 6d))
-    assert(NDArray.clip(ndarray, 2d, 5d).toFloat64Array === Array(2d, 2d, 3d, 4d, 5d, 5d))
   }
 
   test("sqrt") {
-    var ndarray = NDArray.empty(4, 1)
+    val ndarray = NDArray.empty(4, 1)
     ndarray.set(Array(0f, 1f, 4f, 9f))
     assert(NDArray.sqrt(ndarray).toArray === Array(0f, 1f, 2f, 3f))
-
-    // Float64 methods test
-    ndarray = NDArray.empty(shape = Shape(4, 1), dtype = DType.Float64)
-    ndarray.set(Array(0d, 1d, 4d, 9d))
-    assert(NDArray.sqrt(ndarray).toFloat64Array === Array(0d, 1d, 2d, 3d))
   }
 
   test("rsqrt") {
-    var ndarray = NDArray.array(Array(1f, 4f), shape = Shape(2, 1))
+    val ndarray = NDArray.array(Array(1f, 4f), shape = Shape(2, 1))
     assert(NDArray.rsqrt(ndarray).toArray === Array(1f, 0.5f))
-
-    // Float64 methods test
-    ndarray = NDArray.array(Array(1d, 4d, 25d), shape = Shape(3, 1), Context.cpu())
-    assert(NDArray.rsqrt(ndarray).toFloat64Array === Array(1d, 0.5d, 0.2d))
   }
 
   test("norm") {
-    var ndarray = NDArray.empty(3, 1)
+    val ndarray = NDArray.empty(3, 1)
     ndarray.set(Array(1f, 2f, 3f))
-    var normed = NDArray.norm(ndarray)
+    val normed = NDArray.norm(ndarray)
     assert(normed.shape === Shape(1))
     assert(normed.toScalar === math.sqrt(14.0).toFloat +- 1e-3f)
-
-    // Float64 methods test
-    ndarray = NDArray.empty(shape = Shape(3, 1), dtype = DType.Float64)
-    ndarray.set(Array(1d, 2d, 3d))
-    normed = NDArray.norm(ndarray)
-    assert(normed.get.dtype === DType.Float64)
-    assert(normed.shape === Shape(1))
-    assert(normed.toFloat64Scalar === math.sqrt(14.0) +- 1e-3d)
   }
 
   test("one hot encode") {
@@ -267,26 +176,25 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
   }
 
   test("power") {
-    var arr = NDArray.array(Array(3f, 5f), shape = Shape(2, 1))
+    val arr = NDArray.array(Array(3f, 5f), shape = Shape(2, 1))
 
-    var arrPower1 = NDArray.power(2f, arr)
+    val arrPower1 = NDArray.power(2f, arr)
     assert(arrPower1.shape === Shape(2, 1))
     assert(arrPower1.toArray === Array(8f, 32f))
 
-    var arrPower2 = NDArray.power(arr, 2f)
+    val arrPower2 = NDArray.power(arr, 2f)
     assert(arrPower2.shape === Shape(2, 1))
     assert(arrPower2.toArray === Array(9f, 25f))
 
-    var arrPower3 = NDArray.power(arr, arr)
+    val arrPower3 = NDArray.power(arr, arr)
     assert(arrPower3.shape === Shape(2, 1))
     assert(arrPower3.toArray === Array(27f, 3125f))
 
-    var arrPower4 = arr ** 2f
-
+    val arrPower4 = arr ** 2f
     assert(arrPower4.shape === Shape(2, 1))
     assert(arrPower4.toArray === Array(9f, 25f))
 
-    var arrPower5 = arr ** arr
+    val arrPower5 = arr ** arr
     assert(arrPower5.shape === Shape(2, 1))
     assert(arrPower5.toArray === Array(27f, 3125f))
 
@@ -298,211 +206,84 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     arr **= arr
     assert(arr.shape === Shape(2, 1))
     assert(arr.toArray === Array(27f, 3125f))
-
-    // Float64 tests
-    arr = NDArray.array(Array(3d, 5d), shape = Shape(2, 1))
-
-    arrPower1 = NDArray.power(2d, arr)
-    assert(arrPower1.shape === Shape(2, 1))
-    assert(arrPower1.dtype === DType.Float64)
-    assert(arrPower1.toFloat64Array === Array(8d, 32d))
-
-    arrPower2 = NDArray.power(arr, 2d)
-    assert(arrPower2.shape === Shape(2, 1))
-    assert(arrPower2.dtype === DType.Float64)
-    assert(arrPower2.toFloat64Array === Array(9d, 25d))
-
-    arrPower3 = NDArray.power(arr, arr)
-    assert(arrPower3.shape === Shape(2, 1))
-    assert(arrPower3.dtype === DType.Float64)
-    assert(arrPower3.toFloat64Array === Array(27d, 3125d))
-
-    arrPower4 = arr ** 2f
-    assert(arrPower4.shape === Shape(2, 1))
-    assert(arrPower4.dtype === DType.Float64)
-    assert(arrPower4.toFloat64Array === Array(9d, 25d))
-
-    arrPower5 = arr ** arr
-    assert(arrPower5.shape === Shape(2, 1))
-    assert(arrPower5.dtype === DType.Float64)
-    assert(arrPower5.toFloat64Array === Array(27d, 3125d))
-
-    arr **= 2d
-    assert(arr.shape === Shape(2, 1))
-    assert(arr.dtype === DType.Float64)
-    assert(arr.toFloat64Array === Array(9d, 25d))
-
-    arr.set(Array(3d, 5d))
-    arr **= arr
-    assert(arr.shape === Shape(2, 1))
-    assert(arr.dtype === DType.Float64)
-    assert(arr.toFloat64Array === Array(27d, 3125d))
   }
 
   test("equal") {
-    var arr1 = NDArray.array(Array(1f, 2f, 3f, 5f), shape = Shape(2, 2))
-    var arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
+    val arr1 = NDArray.array(Array(1f, 2f, 3f, 5f), shape = Shape(2, 2))
+    val arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
 
-    var arrEqual1 = NDArray.equal(arr1, arr2)
+    val arrEqual1 = NDArray.equal(arr1, arr2)
     assert(arrEqual1.shape === Shape(2, 2))
     assert(arrEqual1.toArray === Array(1f, 0f, 1f, 0f))
 
-    var arrEqual2 = NDArray.equal(arr1, 3f)
+    val arrEqual2 = NDArray.equal(arr1, 3f)
     assert(arrEqual2.shape === Shape(2, 2))
     assert(arrEqual2.toArray === Array(0f, 0f, 1f, 0f))
-
-
-    // Float64 methods test
-    arr1 = NDArray.array(Array(1d, 2d, 3d, 5d), shape = Shape(2, 2))
-    arr2 = NDArray.array(Array(1d, 4d, 3d, 6d), shape = Shape(2, 2))
-
-    arrEqual1 = NDArray.equal(arr1, arr2)
-    assert(arrEqual1.shape === Shape(2, 2))
-    assert(arrEqual1.dtype === DType.Float64)
-    assert(arrEqual1.toFloat64Array === Array(1d, 0d, 1d, 0d))
-
-    arrEqual2 = NDArray.equal(arr1, 3d)
-    assert(arrEqual2.shape === Shape(2, 2))
-    assert(arrEqual2.dtype === DType.Float64)
-    assert(arrEqual2.toFloat64Array === Array(0d, 0d, 1d, 0d))
   }
 
   test("not_equal") {
-    var arr1 = NDArray.array(Array(1f, 2f, 3f, 5f), shape = Shape(2, 2))
-    var arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
+    val arr1 = NDArray.array(Array(1f, 2f, 3f, 5f), shape = Shape(2, 2))
+    val arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
 
-    var arrEqual1 = NDArray.notEqual(arr1, arr2)
+    val arrEqual1 = NDArray.notEqual(arr1, arr2)
     assert(arrEqual1.shape === Shape(2, 2))
     assert(arrEqual1.toArray === Array(0f, 1f, 0f, 1f))
 
-    var arrEqual2 = NDArray.notEqual(arr1, 3f)
+    val arrEqual2 = NDArray.notEqual(arr1, 3f)
     assert(arrEqual2.shape === Shape(2, 2))
     assert(arrEqual2.toArray === Array(1f, 1f, 0f, 1f))
-
-    // Float64 methods test
-
-    arr1 = NDArray.array(Array(1d, 2d, 3d, 5d), shape = Shape(2, 2))
-    arr2 = NDArray.array(Array(1d, 4d, 3d, 6d), shape = Shape(2, 2))
-
-    arrEqual1 = NDArray.notEqual(arr1, arr2)
-    assert(arrEqual1.shape === Shape(2, 2))
-    assert(arrEqual1.dtype === DType.Float64)
-    assert(arrEqual1.toFloat64Array === Array(0d, 1d, 0d, 1d))
-
-    arrEqual2 = NDArray.notEqual(arr1, 3d)
-    assert(arrEqual2.shape === Shape(2, 2))
-    assert(arrEqual2.dtype === DType.Float64)
-    assert(arrEqual2.toFloat64Array === Array(1d, 1d, 0d, 1d))
-
   }
 
   test("greater") {
-    var arr1 = NDArray.array(Array(1f, 2f, 4f, 5f), shape = Shape(2, 2))
-    var arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
+    val arr1 = NDArray.array(Array(1f, 2f, 4f, 5f), shape = Shape(2, 2))
+    val arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
 
-    var arrEqual1 = arr1 > arr2
+    val arrEqual1 = arr1 > arr2
     assert(arrEqual1.shape === Shape(2, 2))
     assert(arrEqual1.toArray === Array(0f, 0f, 1f, 0f))
 
-    var arrEqual2 = arr1 > 2f
+    val arrEqual2 = arr1 > 2f
     assert(arrEqual2.shape === Shape(2, 2))
     assert(arrEqual2.toArray === Array(0f, 0f, 1f, 1f))
-
-    // Float64 methods test
-    arr1 = NDArray.array(Array(1d, 2d, 4d, 5d), shape = Shape(2, 2))
-    arr2 = NDArray.array(Array(1d, 4d, 3d, 6d), shape = Shape(2, 2))
-
-    arrEqual1 = arr1 > arr2
-    assert(arrEqual1.shape === Shape(2, 2))
-    assert(arrEqual1.dtype === DType.Float64)
-    assert(arrEqual1.toFloat64Array === Array(0d, 0d, 1d, 0d))
-
-    arrEqual2 = arr1 > 2d
-    assert(arrEqual2.shape === Shape(2, 2))
-    assert(arrEqual2.dtype === DType.Float64)
-    assert(arrEqual2.toFloat64Array === Array(0d, 0d, 1d, 1d))
   }
 
   test("greater_equal") {
-    var arr1 = NDArray.array(Array(1f, 2f, 4f, 5f), shape = Shape(2, 2))
-    var arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
+    val arr1 = NDArray.array(Array(1f, 2f, 4f, 5f), shape = Shape(2, 2))
+    val arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
 
-    var arrEqual1 = arr1 >= arr2
+    val arrEqual1 = arr1 >= arr2
     assert(arrEqual1.shape === Shape(2, 2))
     assert(arrEqual1.toArray === Array(1f, 0f, 1f, 0f))
 
-    var arrEqual2 = arr1 >= 2f
+    val arrEqual2 = arr1 >= 2f
     assert(arrEqual2.shape === Shape(2, 2))
     assert(arrEqual2.toArray === Array(0f, 1f, 1f, 1f))
-
-    // Float64 methods test
-    arr1 = NDArray.array(Array(1d, 2d, 4d, 5d), shape = Shape(2, 2))
-    arr2 = NDArray.array(Array(1d, 4d, 3d, 6d), shape = Shape(2, 2))
-
-    arrEqual1 = arr1 >= arr2
-    assert(arrEqual1.shape === Shape(2, 2))
-    assert(arrEqual1.dtype === DType.Float64)
-    assert(arrEqual1.toFloat64Array === Array(1d, 0d, 1d, 0d))
-
-    arrEqual2 = arr1 >= 2d
-    assert(arrEqual2.shape === Shape(2, 2))
-    assert(arrEqual2.dtype === DType.Float64)
-    assert(arrEqual2.toFloat64Array === Array(0d, 1d, 1d, 1d))
   }
 
   test("lesser") {
-    var arr1 = NDArray.array(Array(1f, 2f, 4f, 5f), shape = Shape(2, 2))
-    var arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
+    val arr1 = NDArray.array(Array(1f, 2f, 4f, 5f), shape = Shape(2, 2))
+    val arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
 
-    var arrEqual1 = arr1 < arr2
+    val arrEqual1 = arr1 < arr2
     assert(arrEqual1.shape === Shape(2, 2))
     assert(arrEqual1.toArray === Array(0f, 1f, 0f, 1f))
 
-    var arrEqual2 = arr1 < 2f
+    val arrEqual2 = arr1 < 2f
     assert(arrEqual2.shape === Shape(2, 2))
     assert(arrEqual2.toArray === Array(1f, 0f, 0f, 0f))
-
-    // Float64 methods test
-    arr1 = NDArray.array(Array(1d, 2d, 4d, 5d), shape = Shape(2, 2))
-    arr2 = NDArray.array(Array(1d, 4d, 3d, 6d), shape = Shape(2, 2))
-
-    arrEqual1 = arr1 < arr2
-    assert(arrEqual1.shape === Shape(2, 2))
-    assert(arrEqual1.dtype === DType.Float64)
-    assert(arrEqual1.toFloat64Array === Array(0d, 1d, 0d, 1d))
-
-    arrEqual2 = arr1 < 2d
-    assert(arrEqual2.shape === Shape(2, 2))
-    assert(arrEqual2.dtype === DType.Float64)
-    assert(arrEqual2.toFloat64Array === Array(1d, 0d, 0d, 0d))
-
   }
 
   test("lesser_equal") {
-    var arr1 = NDArray.array(Array(1f, 2f, 4f, 5f), shape = Shape(2, 2))
-    var arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
+    val arr1 = NDArray.array(Array(1f, 2f, 4f, 5f), shape = Shape(2, 2))
+    val arr2 = NDArray.array(Array(1f, 4f, 3f, 6f), shape = Shape(2, 2))
 
-    var arrEqual1 = arr1 <= arr2
+    val arrEqual1 = arr1 <= arr2
     assert(arrEqual1.shape === Shape(2, 2))
     assert(arrEqual1.toArray === Array(1f, 1f, 0f, 1f))
 
-    var arrEqual2 = arr1 <= 2f
+    val arrEqual2 = arr1 <= 2f
     assert(arrEqual2.shape === Shape(2, 2))
     assert(arrEqual2.toArray === Array(1f, 1f, 0f, 0f))
-
-    // Float64 methods test
-    arr1 = NDArray.array(Array(1d, 2d, 4d, 5d), shape = Shape(2, 2))
-    arr2 = NDArray.array(Array(1d, 4d, 3d, 6d), shape = Shape(2, 2))
-
-    arrEqual1 = arr1 <= arr2
-    assert(arrEqual1.shape === Shape(2, 2))
-    assert(arrEqual1.dtype === DType.Float64)
-    assert(arrEqual1.toFloat64Array === Array(1d, 1d, 0d, 1d))
-
-    arrEqual2 = arr1 <= 2d
-    assert(arrEqual2.shape === Shape(2, 2))
-    assert(arrEqual2.dtype === DType.Float64)
-    assert(arrEqual2.toFloat64Array === Array(1d, 1d, 0d, 0d))
   }
 
   test("choose_element_0index") {
@@ -513,18 +294,11 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
   }
 
   test("copy to") {
-    var source = NDArray.array(Array(1f, 2f, 3f), shape = Shape(1, 3))
-    var dest = NDArray.empty(1, 3)
+    val source = NDArray.array(Array(1f, 2f, 3f), shape = Shape(1, 3))
+    val dest = NDArray.empty(1, 3)
     source.copyTo(dest)
     assert(dest.shape === Shape(1, 3))
     assert(dest.toArray === Array(1f, 2f, 3f))
-
-    // Float64 methods test
-    source = NDArray.array(Array(1d, 2d, 3d), shape = Shape(1, 3))
-    dest = NDArray.empty(shape = Shape(1, 3), dtype = DType.Float64)
-    source.copyTo(dest)
-    assert(dest.dtype === DType.Float64)
-    assert(dest.toFloat64Array === Array(1d, 2d, 3d))
   }
 
   test("abs") {
@@ -591,12 +365,6 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val arr = NDArray.maximum(arr1, arr2)
     assert(arr.shape === Shape(3, 1))
     assert(arr.toArray === Array(4f, 2.1f, 3.7f))
-
-    // Float64 methods test
-    val arr3 = NDArray.array(Array(1d, 2d, 3d), shape = Shape(3, 1))
-    val maxArr = NDArray.maximum(arr3, 10d)
-    assert(maxArr.shape === Shape(3, 1))
-    assert(maxArr.toArray === Array(10d, 10d, 10d))
   }
 
   test("min") {
@@ -610,18 +378,11 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val arr = NDArray.minimum(arr1, arr2)
     assert(arr.shape === Shape(3, 1))
     assert(arr.toArray === Array(1.5f, 1f, 3.5f))
-
-    // Float64 methods test
-    val arr3 = NDArray.array(Array(4d, 5d, 6d), shape = Shape(3, 1))
-    val minArr = NDArray.minimum(arr3, 5d)
-    assert(minArr.shape === Shape(3, 1))
-    assert(minArr.toFloat64Array === Array(4d, 5d, 5d))
   }
 
   test("sum") {
-    var arr = NDArray.array(Array(1f, 2f, 3f, 4f), shape = Shape(2, 2))
+    val arr = NDArray.array(Array(1f, 2f, 3f, 4f), shape = Shape(2, 2))
     assert(NDArray.sum(arr).toScalar === 10f +- 1e-3f)
-
   }
 
   test("argmaxChannel") {
@@ -637,12 +398,6 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val arr = NDArray.concatenate(arr1, arr2)
     assert(arr.shape === Shape(3, 3))
     assert(arr.toArray === Array(1f, 2f, 4f, 3f, 3f, 3f, 8f, 7f, 6f))
-
-    // Try concatenating float32 arr with float64 arr. Should get exception
-    intercept[Exception] {
-      val arr3 = NDArray.array(Array (5d, 6d, 7d), shape = Shape(1, 3))
-      NDArray.concatenate(Array(arr1, arr3))
-    }
   }
 
   test("concatenate axis-1") {
@@ -651,12 +406,6 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val arr = NDArray.concatenate(Array(arr1, arr2), axis = 1)
     assert(arr.shape === Shape(2, 3))
     assert(arr.toArray === Array(1f, 2f, 5f, 3f, 4f, 6f))
-
-    // Try concatenating float32 arr with float64 arr. Should get exception
-    intercept[Exception] {
-      val arr3 = NDArray.array(Array (5d, 6d), shape = Shape(2, 1))
-      NDArray.concatenate(Array(arr1, arr3), axis = 1)
-    }
   }
 
   test("transpose") {
@@ -679,24 +428,6 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
       val loadedArray = arrays(0)
       assert(loadedArray.shape === Shape(3, 1))
       assert(loadedArray.toArray === Array(1f, 2f, 3f))
-      assert(loadedArray.dtype === DType.Float32)
-    } finally {
-      val file = new File(filename)
-      file.delete()
-    }
-
-    // Try the same for Float64 array
-    try {
-      val ndarray = NDArray.array(Array(1d, 2d, 3d), shape = Shape(3, 1), ctx = Context.cpu())
-      NDArray.save(filename, Map("local" -> ndarray))
-      val (keys, arrays) = NDArray.load(filename)
-      assert(keys.length === 1)
-      assert(keys(0) === "local")
-      assert(arrays.length === 1)
-      val loadedArray = arrays(0)
-      assert(loadedArray.shape === Shape(3, 1))
-      assert(loadedArray.toArray === Array(1d, 2d, 3d))
-      assert(loadedArray.dtype === DType.Float64)
     } finally {
       val file = new File(filename)
       file.delete()
@@ -715,24 +446,6 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
       val loadedArray = arrays(0)
       assert(loadedArray.shape === Shape(3, 1))
       assert(loadedArray.toArray === Array(1f, 2f, 3f))
-      assert(loadedArray.dtype === DType.Float32)
-    } finally {
-      val file = new File(filename)
-      file.delete()
-    }
-
-    // Try the same thing for Float64 array :
-
-    try {
-      val ndarray = NDArray.array(Array(1d, 2d, 3d), shape = Shape(3, 1), ctx = Context.cpu())
-      NDArray.save(filename, Array(ndarray))
-      val (keys, arrays) = NDArray.load(filename)
-      assert(keys.length === 0)
-      assert(arrays.length === 1)
-      val loadedArray = arrays(0)
-      assert(loadedArray.shape === Shape(3, 1))
-      assert(loadedArray.toArray === Array(1d, 2d, 3d))
-      assert(loadedArray.dtype === DType.Float64)
     } finally {
       val file = new File(filename)
       file.delete()
@@ -751,11 +464,9 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val ndarray2 = NDArray.array(Array(1f, 2f, 3f), shape = Shape(3, 1))
     val ndarray3 = NDArray.array(Array(1f, 2f, 3f), shape = Shape(1, 3))
     val ndarray4 = NDArray.array(Array(3f, 2f, 3f), shape = Shape(3, 1))
-    val ndarray5 = NDArray.array(Array(3d, 2d, 3d), shape = Shape(3, 1), ctx = Context.cpu())
     ndarray1 shouldEqual ndarray2
     ndarray1 shouldNot equal(ndarray3)
     ndarray1 shouldNot equal(ndarray4)
-    ndarray5 shouldNot equal(ndarray3)
   }
 
   test("slice") {
@@ -834,7 +545,6 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
     val bytes = arr.serialize()
     val arrCopy = NDArray.deserialize(bytes)
     assert(arr === arrCopy)
-    assert(arrCopy.dtype === DType.Float32)
   }
 
   test("dtype int32") {
@@ -870,22 +580,18 @@ class NDArraySuite extends FunSuite with BeforeAndAfterAll with Matchers {
   test("NDArray random module is generated properly") {
     val lam = NDArray.ones(1, 2)
     val rnd = NDArray.random.poisson(lam = Some(lam), shape = Some(Shape(3, 4)))
-    val rnd2 = NDArray.random.poisson(lam = Some(1f), shape = Some(Shape(3, 4)),
-      dtype = Some("float64"))
+    val rnd2 = NDArray.random.poisson(lam = Some(1f), shape = Some(Shape(3, 4)))
     assert(rnd.shape === Shape(1, 2, 3, 4))
     assert(rnd2.shape === Shape(3, 4))
-    assert(rnd2.head.dtype === DType.Float64)
   }
 
   test("NDArray random module is generated properly - special case of 'normal'") {
     val mu = NDArray.ones(1, 2)
     val sigma = NDArray.ones(1, 2) * 2
     val rnd = NDArray.random.normal(mu = Some(mu), sigma = Some(sigma), shape = Some(Shape(3, 4)))
-    val rnd2 = NDArray.random.normal(mu = Some(1f), sigma = Some(2f), shape = Some(Shape(3, 4)),
-      dtype = Some("float64"))
+    val rnd2 = NDArray.random.normal(mu = Some(1f), sigma = Some(2f), shape = Some(Shape(3, 4)))
     assert(rnd.shape === Shape(1, 2, 3, 4))
     assert(rnd2.shape === Shape(3, 4))
-    assert(rnd2.head.dtype === DType.Float64)
   }
 
   test("Generated api") {
