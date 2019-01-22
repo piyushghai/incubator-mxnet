@@ -20,7 +20,6 @@
             [org.apache.clojure-mxnet.infer :as infer]
             [org.apache.clojure-mxnet.layout :as layout]
             [clojure.java.io :as io]
-            [infer.draw :as draw]
             [clojure.string :refer [join]]
             [clojure.tools.cli :refer [parse-opts]])
   (:gen-class))
@@ -46,49 +45,37 @@
    ["-i" "--input-image IMAGE" "Input image"
     :default "images/dog.jpg"
     :validate [check-valid-file "Input file not found"]]
-   ["-o" "--output-dir IMAGE_DIR" "Output directory. Defaults to results"
-    :default "results/"
-    :validate [check-valid-dir "Output directory not found"]]
    ["-d" "--input-dir IMAGE_DIR" "Input directory"
     :default "images/"
     :validate [check-valid-dir "Input directory not found"]]
    ["-h" "--help"]])
 
-(defn result->map [{:keys [class prob x-min y-min x-max y-max]}]
-  (hash-map
-   :label class
-   :confidence (int (* 100 prob))
-   :top-left [x-min y-min]
-   :bottom-right [x-max y-max]))
-
-(defn print-results [results]
-  (doseq [_r results]
-    (println (format "Class: %s Confidence=%s Coords=(%s, %s)"
-                     (_r :label)
-                     (_r :confidence)
-                     (_r :top-left)
-                     (_r :bottom-right)))))
-
-(defn process-results [images results output-dir]
-  (dotimes [i (count images)]
-    (let [image (nth images i) _results (map result->map (nth results i))]
-      (println "processing: " image)
-      (print-results _results)
-      (draw/draw-bounds image _results output-dir))))
+(defn print-predictions
+  "Print image detector predictions for the given input file"
+  [predictions width height]
+  (println (apply str (repeat 80 "=")))
+  (doseq [{:keys [class prob x-min y-min x-max y-max]} predictions]
+    (println (format
+              "Class: %s Prob=%.5f Coords=(%.3f, %.3f, %.3f, %.3f)"
+              class
+              prob
+              (* x-min width)
+              (* y-min height)
+              (* x-max width)
+              (* y-max height))))
+  (println (apply str (repeat 80 "="))))
 
 (defn detect-single-image
   "Detect objects in a single image and print top-5 predictions"
-  [detector input-image output-dir]
+  [detector input-image]
   (let [image (infer/load-image-from-file input-image)
-        topk 5]
-    (process-results
-     [input-image]
-     (infer/detect-objects detector image topk)
-     output-dir)))
+        topk 5
+        [predictions] (infer/detect-objects detector image topk)]
+    predictions))
 
 (defn detect-images-in-dir
   "Detect objects in all jpg images in the directory"
-  [detector input-dir output-dir]
+  [detector input-dir]
   (let [batch-size 20
         image-file-batches (->> input-dir
                                 io/file
@@ -97,18 +84,15 @@
                                 (filter #(re-matches #".*\.jpg$" (.getPath %)))
                                 (mapv #(.getPath %))
                                 (partition-all batch-size))]
-    (doall
-     (for [image-files image-file-batches]
-       (let [image-batch (infer/load-image-paths image-files) topk 5]
-         (process-results
-          image-files
-          (infer/detect-objects-batch detector image-batch topk)
-          output-dir))))))
+    (apply concat (for [image-files image-file-batches]
+                    (let [image-batch (infer/load-image-paths image-files)
+                          topk 5]
+                      (infer/detect-objects-batch detector image-batch topk))))))
 
 (defn run-detector
   "Runs an image detector based on options provided"
   [options]
-  (let [{:keys [model-path-prefix input-image input-dir output-dir
+  (let [{:keys [model-path-prefix input-image input-dir
                 device device-id]} options
         width 512 height 512
         descriptors [{:name "data"
@@ -119,11 +103,12 @@
         detector (infer/create-object-detector
                   factory
                   {:contexts [(context/default-context)]})]
-    (println "Output results to:" output-dir ":" (.mkdir (io/file output-dir)))
     (println "Object detection on a single image")
-    (detect-single-image detector input-image output-dir)
+    (print-predictions (detect-single-image detector input-image) width height)
+    (println "\n")
     (println "Object detection on images in a directory")
-    (detect-images-in-dir detector input-dir output-dir)))
+    (doseq [predictions (detect-images-in-dir detector input-dir)]
+      (print-predictions predictions width height))))
 
 (defn -main
   [& args]

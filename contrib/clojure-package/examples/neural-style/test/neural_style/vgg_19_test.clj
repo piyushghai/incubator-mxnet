@@ -18,7 +18,7 @@
 (ns neural-style.vgg-19-test
 	(:require 
 		[clojure.test :refer :all]
-		[opencv4.core :as cv]
+		[mikera.image.core :as img]
 		[clojure.java.io :as io]
 		[org.apache.clojure-mxnet.ndarray :as ndarray]
 		[org.apache.clojure-mxnet.context :as context]
@@ -26,8 +26,9 @@
 
 (defn pic-to-ndarray-vec[path]
 	(-> path 
-		cv/imread
-	 	neural/image->ndarray))
+		img/load-image 
+	 	neural/image->ndarray
+	 	ndarray/->vec))
 
 (defn last-modified-check[x]
 	(let [t (- (System/currentTimeMillis) (.lastModified x)) ]
@@ -48,3 +49,5 @@
 (deftest vgg-19-test
 	(neural/train [(context/cpu)] 3)
     (is (not (nil? (latest-pic-to-ndarray-vec "output")))))
+; generated file different depending on the platform :/ 
+; (pic-to-ndarray-vec "test/ref_out_2.png"))))

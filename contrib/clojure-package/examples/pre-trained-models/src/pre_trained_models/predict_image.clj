@@ -22,8 +22,8 @@
             [org.apache.clojure-mxnet.ndarray :as ndarray]
             [org.apache.clojure-mxnet.shape :as mx-shape]
             [org.apache.clojure-mxnet.symbol :as sym]
-            [opencv4.core :as cv]
-            [opencv4.utils :as cvu]))
+            [mikera.image.core :as img]
+            [think.image.pixel :as pixel]))
 
 ;; based on https://mxnet.incubator.apache.org/tutorials/python/predict_image.html
 
@@ -40,13 +40,21 @@
     (io/copy in out)))
 
 (defn get-image [url show?]
-  (-> url
-      (cvu/mat-from-url)
-      (cv/resize! (cv/new-size h w))
-      (#(do (if show? (cvu/imshow %)) %))
-      (cv/convert-to! cv/CV_8SC3 0.5) 
-      (cvu/mat->flat-rgb-array)
-      (ndarray/array [1 num-channels h w])))
+  (let [fname "test-image.jpg"
+        _ (download url fname)
+        image (-> (img/load-image fname)
+                  (img/resize h w))
+        pixels (img/get-pixels image)
+        rgb-pixels (reduce (fn [result pixel]
+                             (let [[rs gs bs] result
+                                   [r g b _] (pixel/unpack-pixel pixel)]
+                               [(conj rs r) (conj gs g) (conj bs b)]))
+                           [[] [] []]
+                           pixels)]
+    (when show? (img/show image))
+    (-> rgb-pixels
+        (flatten)
+        (ndarray/array [1 num-channels h w]))))
 
 (defn predict [img-url show?]
   (let [mod (m/load-checkpoint {:prefix (str model-dir "/resnet-152") :epoch 0})
@@ -81,13 +89,6 @@
         (ffirst)
         (ndarray/shape)
         (mx-shape/->vec))))
-
-(defn -main [& args]
-  (println 
-   (predict 
-    (or (first args)
-        "https://raw.githubusercontent.com/dmlc/web-data/master/mxnet/doc/tutorials/python/predict_image/cat.jpg" )
-        true)))
 
 (comment
 
