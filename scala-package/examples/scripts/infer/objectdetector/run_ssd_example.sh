@@ -29,8 +29,11 @@ INPUT_IMG=$2
 # which input image dir
 INPUT_DIR=$3
 
-java -Xmx8G -cp $CLASS_PATH \
+DRAW_BOUNDING_BOXES=$4
+
+java -Xmx8G -cp $CLASS_PATH -Djavacpp.platform.dependencies=true \
 	org.apache.mxnetexamples.infer.objectdetector.SSDClassifierExample \
 	--model-path-prefix $MODEL_DIR \
 	--input-image $INPUT_IMG \
-	--input-dir $INPUT_DIR
+	--input-dir $INPUT_DIR \
+	--draw-boxes $4

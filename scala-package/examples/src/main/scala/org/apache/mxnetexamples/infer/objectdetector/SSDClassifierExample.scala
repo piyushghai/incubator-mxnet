@@ -19,7 +19,9 @@ package org.apache.mxnetexamples.infer.objectdetector
 // scalastyle:off
 import java.awt.image.BufferedImage
 
+import javax.swing.JFrame
 import org.apache.mxnetexamples.benchmark.CLIParserBase
+import org.opencv.core.Core
 // scalastyle:on
 import java.io.File
 
@@ -34,6 +36,10 @@ import java.nio.file.{Files, Paths}
 import org.apache.mxnetexamples.InferBase
 
 import scala.collection.mutable.ListBuffer
+
+import org.bytedeco.javacpp.opencv_core.{Point, Scalar}
+import org.bytedeco.javacpp.opencv_imgcodecs._
+import org.bytedeco.javacpp.opencv_imgproc.{putText, rectangle}
 
 // scalastyle:off
 /**
@@ -114,6 +120,7 @@ object SSDClassifierExample {
     val mdprefixDir = inst.modelPathPrefix
     val imgPath = inst.inputImagePath
     val imgDir = inst.inputImageDir
+    val drawBoundingBoxes = inst.drawBoxes
     if (!checkExist(Array(mdprefixDir + "-symbol.json", imgDir, imgPath))) {
       logger.error("Model or input image path does not exist")
       sys.exit(1)
@@ -149,6 +156,12 @@ object SSDClassifierExample {
         }
       }
       logger.info(outputStr)
+
+      // Demonstrate the drawing of the bounding boxes here
+
+      if (drawBoundingBoxes.equalsIgnoreCase("true")) {
+        drawBoundingBoxesOnImage(imgPath, output)
+      }
 
       val outputList = runObjectDetectionBatch(mdprefixDir, imgDir, context)
 
@@ -190,6 +203,47 @@ object SSDClassifierExample {
     exist
   }
 
+  def drawBoundingBoxesOnImage(imgPath: String,
+                        boxInfo : IndexedSeq[IndexedSeq[(String, Array[Float])]]) : Unit = {
+
+    val imgMat = imread(imgPath)
+
+    for (element <- boxInfo) {
+      for (info <- element) {
+        val classLabel = info._1
+
+        val probability = info._2(0)
+
+        // Draw the bounding box only when confident
+        if (probability > 0.5) {
+
+          val xmin = (info._2(1) * imgMat.size.width).toInt
+          val ymin = (info._2(2) * imgMat.size.height).toInt
+
+          val xmax = (info._2(3) * imgMat.size.width).toInt
+          val ymax = (info._2(4) * imgMat.size.height).toInt
+
+          putText(imgMat, f"$classLabel%s ($probability%1.2f)",
+            new Point(xmin, ymin), // text position
+            Core.FONT_HERSHEY_PLAIN, // font type
+            1.0, //font scale
+            new Scalar(255, 255, 255, 255), // white color
+            1, //text thickness
+            Core.LINE_AA, //line type
+            false) // origin is at top left
+          rectangle(imgMat,
+            new Point(xmin, ymin),
+            new Point(xmax, ymax),
+            new Scalar(255, 255, 255, 255)) // white color
+        }
+      }
+    }
+
+    // TODO Save the image here to the same path as the original image
+    imwrite(imgPath, imgMat)
+
+  }
+
 }
 
 class CLIParser extends CLIParserBase {
@@ -199,6 +253,8 @@ class CLIParser extends CLIParserBase {
   val inputImagePath: String = "/images/dog.jpg"
   @Option(name = "--input-dir", usage = "the input batch of images directory")
   val inputImageDir: String = "/images/"
+  @Option(name ="--draw-boxes", usage = "Output the image with bounding boxes around the objects")
+  val drawBoxes: String = "false"
 }
 
 class SSDClassifierExample(CLIParser: CLIParser)
