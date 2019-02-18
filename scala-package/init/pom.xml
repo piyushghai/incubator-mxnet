@@ -66,11 +66,25 @@
                 </goals>
                 <configuration>
                   <executable>bash</executable>
-                  <commandlineArgs>${project.parent.basedir}/dev/compile-mxnet-backend.sh ${build.platform} ${project.parent.basedir}/../</commandlineArgs>
+                  <commandlineArgs>-c "cd ${project.parent.basedir}/.. &amp;&amp; ./ci/publish/scala/engine.sh ${env.mxnet_variant}"</commandlineArgs>
                 </configuration>
               </execution>
             </executions>
           </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>deploy</id>
+      <build>
+        <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-deploy-plugin</artifactId>

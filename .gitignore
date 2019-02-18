@@ -176,4 +176,5 @@ cxx
 *.gcov
 *.gcno
 coverage.xml
+/staticdeps
 
